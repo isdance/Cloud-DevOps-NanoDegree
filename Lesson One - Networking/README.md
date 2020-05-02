@@ -34,7 +34,7 @@ IPv4: A 32-bit value. For example: `192.168.112.20`. This format is for human re
 
 2 to the power of 32 = 4.294.967.296 (4 billion) IP addresses, already fewer than the people living on the earth. Besides there are some IP addresses are reserved for private addressing, testing, documentation and other services. In total, 1/8 IP addresses are unavailable for public addressing.
 
-![IP address space](./docs/imgs/IPv4-address-space.png)
+![IP address space](./docs/imgs/ipv4-address-space.png)
 
 - The pink squares (0, 10, and 127) are blocks that are entirely reserved.
 - The blue squares are blocks that are partially reserved. For instance, not all of the 192 block is reserved, but some of it is.
@@ -378,6 +378,7 @@ Lastly, **MX Record**, which stands for MX Exchange record, an MX record specifi
 #### 15. DNS Hierarchy
 
 DNS structure is hierarchical
+
 ![DNS Hierarchy](./docs/imgs/dns-hierarchy-01.png)
 
 ![DNS Hierarchy](./docs/imgs/dns-hierarchy-02.png)
