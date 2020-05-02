@@ -50,6 +50,7 @@ The devices on the same network are sharing a common prefix, like the pic above,
 Devices on the same network can communicate to each other without needing a router.
 
 **A network with longer prefix will have less ip address**
+
 ![long prefix](./docs/imgs/long-prefix-less-ip.png)
 In above example, a /24 network, the first 24 bits are dedicated toward the prefix, and 8 bits are left for addressing.
 
@@ -184,9 +185,11 @@ Let's see each of these in more detail. First, we'll start with encapsulation.
 **Encapsulation** is happening on the **sending** devices.
 
 Each above layer will add some header(control information) to the data, and pass it down to lower layer. (except for 2 layers, layer 2 will not ONLY prepend control information to the header, but also to the trailer. layer 1 has no data but electrical signals)
+
 ![encapsulation](./docs/imgs/encapsulation-02.png)
 
 **Decapsulation** is happening on **receiving** devices.
+
 ![Decapsulation](./docs/imgs/encapsulation-03.png)
 
 To recap, when data travels down the OSI model, the data from a higher layer becomes the "payload" for a lower layer. When the data moves from a higher layer to a lower layer, the data is wrapped in new information called a "header" and a "footer". This is where it gets the name "encapsulation"; because the data is wrapped (or encapsulated) with new header/footer layers.
@@ -267,16 +270,20 @@ This will create a much larger LAN, but still one subnet, and one broadcast doma
 As a LAN grows in size, the volume of broadcast data grows as well. To resolve this issue, there are 2 solutions:
 
 1. Subnetting:
-   ![Switching](./docs/imgs/switching-scale-03.png)
+![Switching](./docs/imgs/switching-scale-03.png)
 
 2. Virtual LANs (VLANs)
-   ![Switching](./docs/imgs/vlan-01.png)
-   creating multiple Virtual LANs on a single switch.
+![Switching](./docs/imgs/vlan-01.png)
+Creating multiple Virtual LANs on a single switch.
 
 ### Virtual LANs
 
 VLANs logically segment a network into distinct LANs. VLANs users software as opposed to hardware to separate individual devices into separate networks.
-![Switching](./docs/imgs/vlan-02.png)
+![VLANs](./docs/imgs/vlan-02.png)
 Each of these VLANs is its own subnet, within its own broadcast domain, even though they are sharing a single physical switch.
 
 The physical switch accomplishes this logical segmentation by associating each of its ports with the appropriate VLAN.
+![VLANs](./docs/imgs/vlan-03.png)
+
+VLAN can be easily scale up by adding more switches using truncate links
+![VLANs](./docs/imgs/vlan-04.png)
