@@ -53,12 +53,12 @@ Devices on the same network can communicate to each other without needing a rout
 
 **A network with longer prefix will have less IP address**
 
-![long prefix](./docs/imgs/long-prefix-less-IP.png)
+![long prefix](./docs/imgs/long-prefix-less-ip.png)
 In above example, a /24 network, the first 24 bits are dedicated toward the prefix, and 8 bits are left for addressing.
 
 2 to the power of 8 is 256, and first & last IP address (.0 and .255) are reserved, plus commonly the second IP address (.1) is used for router, so effectively only 253 IP addresses are left for addressing in a /24 network
 
-![shorter prefix](./docs/imgs/short-prefix-more-IP.png)
+![shorter prefix](./docs/imgs/short-prefix-more-ip.png)
 In above example, a /16 network, the first 16 bits are dedicated toward the prefix, and 16 bits are left for addressing.
 
 2 to the power of 16 is 65,536, and first & last IP address (.0 and .255) are reserved, plus commonly the second IP address (.1) is used for router, so effectively only 65,5363 IP addresses are left for addressing in a /24 network
@@ -77,7 +77,7 @@ for example IP address 192.117.66.237/22
 
 ![convert IP to binary](./docs/imgs/divide-network-block.png)
 
-![convert IP to binary](./docs/imgs/check-IP-subnet.png)
+![convert IP to binary](./docs/imgs/check-ip-subnet.png)
 
 There are 2 online tools for [IP Address to Binary](https://www.browserling.com/tools/IP-to-bin) and [Binary to IP Address](https://www.browserling.com/tools/bin-to-IP)
 
@@ -359,4 +359,61 @@ DNS server belongs to Layer 7 Application level, since applications often need t
 
 #### 14. Types of DNS Records
 
-When you type in an FQDN or hostname into your browser and hit enter, your browser checks its local cache to see if it knows which IP address corresponds to this FQDN. If no result is found, then the browser queries against an authoritative DNS server for the IP address associated with that FQDN.
+When you type in an FQDN or hostname into your browser and hit enter, your browser checks its local cache to see if it knows which IP address corresponds to this FQDN. If no relation is found in the cache, then the browser queries against an authoritative DNS server for the IP address associated with that FQDN.
+
+The query can result in 2 types of records being returned:
+If the address is an IPv4 address, then the DNS server returns a **A Record**
+If the address is an IPv6 address, then the DNS server returns a **AAAA Record**
+
+DNS server can also perform a reverse lookup, which is IP -> FQDN Record
+
+When query for an IP address, the DNS server retrieves a pointer record, which point to a **CNAME**, which stands for canonical name record. **CNAME** records are **alias for A Record or AAAA Record**, for example, `www.google.com` point to `goolge.com`
+
+**NS** Record or name server record, indicates which DNS server is authoritative for that domain. An authoritative server is a server that holds the actual DNS record for that zone or domain.
+
+Lastly, **MX Record**, which stands for MX Exchange record, an MX record specifies which server will handle an email request on behalf of recipient's domain, so when query `support@google.com`, the DNS server will lookup at `google.com` and provide the IP address of the mail server
+
+![Types of DNS Records](./docs/imgs/dns-record-types.png)
+
+#### 15. DNS Hierarchy
+
+DNS structure is hierarchical
+![DNS Hierarchy](./docs/imgs/dns-hierarchy-01.png)
+
+![DNS Hierarchy](./docs/imgs/dns-hierarchy-02.png)
+
+Now you can see the FQDN is resolved from right to left, for example `www.google.com`, it will first resovle `.com` first level domain, then `google` second level domain, lastly `www` sub-domain.
+
+Along the way, if the 'wwww.google.com' is cached in any level of DNS server, then it will returned cached result straight away.
+
+#### 16. Loading Balancing
+
+A load balancer is a server that balance the incoming traffic load in order to optimize the use of our web servers. It will decide what server from server pool a user's request should be directed to.
+
+![Loading Balancing](./docs/imgs/load-balancing-01.png)
+
+![Loading Balancing](./docs/imgs/load-balancing-02.png)
+
+Main Benefits of Load Balancer
+
+1. Availability. If any of a server in server pool is down, the others are still working.
+
+   ![Loading Balancing](./docs/imgs/load-balancing-03.png)
+
+2. Scalability of resources with little or no human intervention.
+
+   ![Loading Balancing](./docs/imgs/load-balancing-04.png)
+
+#### 17. Load Balancing Approaches
+
+Load Balancing Approaches - Summary
+
+Different load balancing approaches provide different benefits. These different approaches are explained below. This is, however, not an exhaustive list, just a list of some of the most common approaches.
+
+- Round Robin - Requests are distributed across the group of servers sequentially.
+
+- BGP Anycast - BGP Anycast allows multiple servers to advertise the same IP address. DNS servers respond to queries with the same IP address. The routing infrastructure of the internet, using BGP, then routes internet traffic to different web servers over the shortest route possible.
+
+- Policy-based DNS load balancing - Uses policies to load balance traffic requests. For example, the IP address of the client’s resolver may be used to determine which server receives the request.
+
+- Dedicated Load Balancing - Enables you to deploy and configure one or more custom load-balancers within a VPC.
