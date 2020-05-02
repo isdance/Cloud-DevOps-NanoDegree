@@ -29,17 +29,19 @@ Three main components of networking
 
 #### 4. Addressing
 
-2 Ip standards are used: IPv4 and IPv6
+2 IP standards are used: IPv4 and IPv6
 IPv4: A 32-bit value. For example: `192.168.112.20`. This format is for human readability, for computer, it will be translated into binary - `11000000.10101000.01110000.00010100`
 
-2 to the power of 32 = 4.294.967.296 (4 billion) IP addresses, already fewer than the people living on the earth. Besides there are some ip addresses are reserved for private addressing, testing, documentation and other services. In total, 1/8 ip addresses are unavailable for public addressing.
+2 to the power of 32 = 4.294.967.296 (4 billion) IP addresses, already fewer than the people living on the earth. Besides there are some IP addresses are reserved for private addressing, testing, documentation and other services. In total, 1/8 IP addresses are unavailable for public addressing.
 
-![ip address space](./docs/imgs/ipv4-address-space.png)
+![IP address space](./docs/imgs/IPv4-address-space.png)
 
 - The pink squares (0, 10, and 127) are blocks that are entirely reserved.
 - The blue squares are blocks that are partially reserved. For instance, not all of the 192 block is reserved, but some of it is.
 - The entire green row (starting at 224) is set aside for IP multi-cast.
 - And the entire orange bottom row (starting at 240) was originally set aside for "future use" but was effectively lost due to being `blocked as invalid`.
+
+Private IP addresses often reside on 10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16, with the most common of all being, 192.168.0.0/24 (with a default gateway of 192.168.0.1).
 
 #### 5. Addressing and Networks
 
@@ -49,35 +51,35 @@ The devices on the same network are sharing a common prefix, like the pic above,
 
 Devices on the same network can communicate to each other without needing a router.
 
-**A network with longer prefix will have less ip address**
+**A network with longer prefix will have less IP address**
 
-![long prefix](./docs/imgs/long-prefix-less-ip.png)
+![long prefix](./docs/imgs/long-prefix-less-IP.png)
 In above example, a /24 network, the first 24 bits are dedicated toward the prefix, and 8 bits are left for addressing.
 
-2 to the power of 8 is 256, and first & last ip address (.0 and .255) are reserved, plus commonly the second ip address (.1) is used for router, so effectively only 253 ip addresses are left for addressing in a /24 network
+2 to the power of 8 is 256, and first & last IP address (.0 and .255) are reserved, plus commonly the second IP address (.1) is used for router, so effectively only 253 IP addresses are left for addressing in a /24 network
 
-![shorter prefix](./docs/imgs/short-prefix-more-ip.png)
+![shorter prefix](./docs/imgs/short-prefix-more-IP.png)
 In above example, a /16 network, the first 16 bits are dedicated toward the prefix, and 16 bits are left for addressing.
 
-2 to the power of 16 is 65,536, and first & last ip address (.0 and .255) are reserved, plus commonly the second ip address (.1) is used for router, so effectively only 65,5363 ip addresses are left for addressing in a /24 network
+2 to the power of 16 is 65,536, and first & last IP address (.0 and .255) are reserved, plus commonly the second IP address (.1) is used for router, so effectively only 65,5363 IP addresses are left for addressing in a /24 network
 
-The format we are using, ip address and a length of prefix (192.168.11.10/24). This notation is called `classless inter-domain routing`, or `cidr` for short, it contains a ip address and the subnet mask.
+The format we are using, IP address and a length of prefix (192.168.11.10/24). This notation is called `classless inter-domain routing`, or `cidr` for short, it contains a IP address and the subnet mask.
 
 One device may want to know if another device is on the same network, we need to do the following calculation:
-for example ip address 192.117.66.237/22
+for example IP address 192.117.66.237/22
 
-- we firstly convert ip to binary
-- then we put subnet mask in binary, underneath ip binary
+- we firstly convert IP to binary
+- then we put subnet mask in binary, underneath IP binary
 - then do a logical AND operation
-- then convert the result back to ip address (192.117.64.0), 192.117.64.0 is the first address in this network block
-  ![convert ip to binary](./docs/imgs/divide-network-block01.png)
-- to find the full range of addresses that belongs to this network, we know the last 2 bits of the third actet are free, which means that there are four different values that the third octet can take, they are 64, 65, 66 and 67
+- then convert the result back to IP address (192.117.64.0), 192.117.64.0 is the first address in this network block
+  ![convert IP to binary](./docs/imgs/divide-network-block01.png)
+- to find the full range of addresses that belongs to this network, we know the last 2 bits of the third octet are free, which means that there are four different values that the third octet can take, they are 64, 65, 66 and 67
 
-![convert ip to binary](./docs/imgs/divide-network-block.png)
+![convert IP to binary](./docs/imgs/divide-network-block.png)
 
-![convert ip to binary](./docs/imgs/check-ip-subnet.png)
+![convert IP to binary](./docs/imgs/check-IP-subnet.png)
 
-There are 2 online tools for [IP Address to Binary](https://www.browserling.com/tools/ip-to-bin) and [Binary to IP Address](https://www.browserling.com/tools/bin-to-ip)
+There are 2 online tools for [IP Address to Binary](https://www.browserling.com/tools/IP-to-bin) and [Binary to IP Address](https://www.browserling.com/tools/bin-to-IP)
 
 Practice:
 
@@ -226,6 +228,7 @@ A switch receives the signal. It will decapsulate it into layer 2 data, and look
 
 Step 5:
 Computer B receives the data. It will decapsulate it into layer 2 data, and looks at the layer 2 header, the data is reaching to reach is computer B itself. So the decapsulate the data, and send it all the way up to application level, and control header information are removed one by one.
+
 ![Network transmission](./docs/imgs/data-transmission-08.png)
 
 ##### Summary
@@ -247,9 +250,9 @@ The process of data moving down the layers is called encapsulation. The process 
 
 A switch operates on layer 2 of the OSI model, so it uses each devices MAC address for the purpose of addressing.
 A switch manages the data flow in a local area network(LAN). Local area network means there is one single network subnet, and one broadcast domain. And there are no layer 3 devices such as a router to connect this network with the outside network.
-An ethernet switch is responsible for directing the flow of traffic to a specific recipient, or multiple recipients.
+An ethernet switch is responsible for directing the flow of traffic to a specific recIPient, or multIPle recIPients.
 It also has additional roles such as buffering and managing transmission speeds.
-![Switching](./docs/imgs/switching.png)
+![Switching](./docs/imgs/switching.png)`
 
 #### 8. Frame Structure
 
@@ -260,9 +263,10 @@ Layer 2 Ethernet Frame contains important information, such as the source MAC an
 #### 9.Switching At Scale
 
 Previously we had a look of how a single switch is working
+
 ![Switching](./docs/imgs/switching-scale-01.png)
 
-When the ports on a single switch is not enough, then we can link multiple switches together, using a special links called "trunk links". **trunk links** are a collection of wires that simultaneously carry multiple frames from one switch to another.
+When the ports on a single switch is not enough, then we can link multIPle switches together, using a special links called "trunk links". **trunk links** are a collection of wires that simultaneously carry multIPle frames from one switch to another.
 
 This will create a much larger LAN, but still one subnet, and one broadcast domain.
 ![Switching](./docs/imgs/switching-scale-02.png)
@@ -270,20 +274,85 @@ This will create a much larger LAN, but still one subnet, and one broadcast doma
 As a LAN grows in size, the volume of broadcast data grows as well. To resolve this issue, there are 2 solutions:
 
 1. Subnetting:
-![Switching](./docs/imgs/switching-scale-03.png)
+
+   ![Switching](./docs/imgs/switching-scale-03.png)
 
 2. Virtual LANs (VLANs)
-![Switching](./docs/imgs/vlan-01.png)
-Creating multiple Virtual LANs on a single switch.
+
+   ![Switching](./docs/imgs/vlan-01.png)
+   Creating multIPle Virtual LANs on a single switch.
 
 ### Virtual LANs
 
 VLANs logically segment a network into distinct LANs. VLANs users software as opposed to hardware to separate individual devices into separate networks.
+
 ![VLANs](./docs/imgs/vlan-02.png)
 Each of these VLANs is its own subnet, within its own broadcast domain, even though they are sharing a single physical switch.
 
 The physical switch accomplishes this logical segmentation by associating each of its ports with the appropriate VLAN.
-![VLANs](./docs/imgs/vlan-03.png)
 
 VLAN can be easily scale up by adding more switches using truncate links
 ![VLANs](./docs/imgs/vlan-04.png)
+
+#### 11. Routing
+
+The core function of a router is to decide where to forward packets.
+
+Router receives a packet, it will examine the destination IP address, and perform a routing table lookup
+
+![routing](./docs/imgs/routing-01.png)
+
+If a matching recording is found, then the routing will direct the traffic to the known destination. Otherwise the packet will be dropped, and router will send an error message to the sender.
+
+Solutions to IPv4 Address Exhaustion
+
+1. Private IP Addresses
+2. Network Address Translation (NAT)
+
+NAT is responsible for translating your private IP address to Public IP address
+![routing](./docs/imgs/routing-02.png)
+
+The www is not a huge single network. It is a network consists of lots of private networks.
+![routing](./docs/imgs/routing-03.png)
+
+However, NAT is a patch to IPv4, it is adding complexity to IPv4 system.
+
+The real solution is the IPv6, which has 128-bit address. And the smalltest network block can be assigned to end user is 64 bits, which is already bigger than the entire IPv4 network.
+
+##### Your Private IPv4 Address
+
+To find your private IP address, you can use a terminal. Depending on which OS (Operating System) you are running, the command to determine your IP address will differ. On a Linux or Mac, type in ifconfig, whereas on a Windows computer, type in IPconfig to find your IP address. The result may look like so,
+
+```
+Ethernet adapter Ethernet:
+
+Connection-specific DNS Suffix . :
+Link-local IPv6 Address . . . . . : fe80::14a5:92a8:6620:114a%4
+IPv4 Address. . . . . . . . . . . : 192.168.50.197
+Subnet Mask . . . . . . . . . . . : 255.255.255.0
+Default Gateway . . . . . . . . . : 192.168.50.1
+```
+
+Often, running this command will return not one, but a number of network interfaces. Ethernet interfaces will be labelled `eth0`, `eth1`, etc., while Wi-Fi interfaces are often labelled `wlan0`, `wlan1`, on so on. A Mac may return an especially large number of network interfaces, as it uses a number of loopback interfaces (interfaces that the OS uses to communicate with itself).
+
+Private IP addresses often reside on 10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16, with the most common of all being, 192.168.0.0/24 (with a default gateway of 192.168.0.1).
+
+#### 12. Wireshark
+
+Wireshark capture network packets and display them in a GUI as much detail as possible.
+
+#### 13. Domain Name System (DNS)
+
+Fully Qualified Domain Name (FQDN)
+A Fully Qualified Domain Name (FQDN) consists of three parts - the hostname, domain, and top-level domain (TLD). The format looks like so,
+
+[host name].\[domain\].\[tld\]
+
+For the FQDN www.udacity.com - www is the hostname, udacity is the domain, and com is the top-level domain.
+
+When the request come to resolve the host name FQDN to an IP address, the authority of DNS server will look it up in its database.
+DNS server belongs to Layer 7 Application level, since applications often need to use host names.
+
+#### 14. Types of DNS Records
+
+When you type in an FQDN or hostname into your browser and hit enter, your browser checks its local cache to see if it knows which IP address corresponds to this FQDN. If no result is found, then the browser queries against an authoritative DNS server for the IP address associated with that FQDN.
