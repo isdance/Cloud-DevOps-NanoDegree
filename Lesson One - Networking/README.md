@@ -218,7 +218,9 @@ A switch receives the signal. It will decapsulate it into layer 2 data, and look
 
 Step 3:
 The router receives the signal. It will decapsulate it into layer 2 data, and looks at the layer 2 header, the data is reaching to reach is the router itself.
+
 ![Network transmission](./docs/imgs/data-transmission-05.png)
+
 So the router removes the layer 2 header, and send it to layer 3. The layer 3 header indicates the destination device is computer B. so the router encapsulate the data, and send it on the wire again, with a new layer 2 header.
 ![Network transmission](./docs/imgs/data-transmission-06.png)
 
@@ -280,6 +282,7 @@ As a LAN grows in size, the volume of broadcast data grows as well. To resolve t
 2. Virtual LANs (VLANs)
 
    ![Switching](./docs/imgs/vlan-01.png)
+
    Creating multIPle Virtual LANs on a single switch.
 
 ### Virtual LANs
@@ -287,6 +290,7 @@ As a LAN grows in size, the volume of broadcast data grows as well. To resolve t
 VLANs logically segment a network into distinct LANs. VLANs users software as opposed to hardware to separate individual devices into separate networks.
 
 ![VLANs](./docs/imgs/vlan-02.png)
+
 Each of these VLANs is its own subnet, within its own broadcast domain, even though they are sharing a single physical switch.
 
 The physical switch accomplishes this logical segmentation by associating each of its ports with the appropriate VLAN.
