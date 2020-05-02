@@ -118,7 +118,7 @@ An edge location is as a mini-data center used solely to cache large data files 
 
 AWS is responsible for security **OF** the cloud, and provide tools that we need to secure our system. we are responsible for security **IN** the cloud.
 
-![shared-responsibility-model]('./docs/images/shared-responsibility-model.png')
+![shared-responsibility-model](./docs/images/shared-responsibility-model.png)
 
 Examples
 
