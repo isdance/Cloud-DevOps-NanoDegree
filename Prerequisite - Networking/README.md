@@ -103,7 +103,7 @@ There are six bits in the third octet are free, so from 122.48.192.0 - 122.48.25
                   which is 172.0.0.0/8
 ```
 
-#### OSI Model
+#### 6. OSI Model
 
 Richard and Julia are trying to communicate over a tin can phone. Earlier, you learned that there are three main components in a network: the medium, the addressing, and the content. In this tin can phone example, the medium is the cord connecting the phones together. We're already directly connected to each other so we don't have to worry about the addressing, and the content is what we're trying to tell each other.
 
@@ -120,7 +120,7 @@ The OSI model is a breakdown of the various aspects of network communication. It
 
 It's a conceptual breakdown of all the parts that are involved and groups them into logical sections.
 
-##### Layers in the OSI Model
+##### 7. Layers in the OSI Model
 
 This is a conceptual model for a network system to handle communication, mainly how devices connect to networks, and how data is sent across a network; it's not a concrete example of how network communication happens.
 
@@ -262,7 +262,7 @@ An layer 1 Ethernet packet contains an Layer 2 Ethernet Frame
 Layer 2 Ethernet Frame contains important information, such as the source MAC and destination MAC, and payload, which contains all information from its above layers.
 ![Switching](./docs/imgs/data-frame.png)
 
-#### 9.Switching At Scale
+#### 9. Switching At Scale
 
 Previously we had a look of how a single switch is working
 
