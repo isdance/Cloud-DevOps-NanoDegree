@@ -285,7 +285,7 @@ As a LAN grows in size, the volume of broadcast data grows as well. To resolve t
 
    Creating multIPle Virtual LANs on a single switch.
 
-### Virtual LANs
+####  10. Virtual LANs
 
 VLANs logically segment a network into distinct LANs. VLANs users software as opposed to hardware to separate individual devices into separate networks.
 
