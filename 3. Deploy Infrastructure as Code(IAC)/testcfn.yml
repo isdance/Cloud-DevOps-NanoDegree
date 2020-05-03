@@ -1,0 +1,9 @@
+Description: >
+  Yang Gu / Udacity
+  This template deploys a VPC.
+Resources:
+  UdacityVPC: # arbitrary name for a resource
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EanbleDnsHostnames: true
