@@ -188,6 +188,7 @@ Security in the cloud allows you to have complete control over your virtual netw
 #### 8. Virtual Private Cloud (VPC)
 
 Topically when you create resources, they are on a flat network that shared among various AWS users. This will help you to reduce admin cost.
+
 ![VPC](./docs/images/vpc-01.png)
 
 Virtual Private Cloud or **VPC** allows you to create your own private network in the cloud. You can launch services, like EC2, inside of that private network. This is done as a security measure. We expose what we do or do not expose to the internet to the public or private subnets.
@@ -315,3 +316,381 @@ Tips
 - A single object can be up to 5 terabytes in size.
 - You can enable Multi-Factor Authentication (MFA) Delete on an S3 bucket to prevent accidental deletions.
 - **S3 Acceleration** can be used to enable fast, easy, and secure transfers of files over long distances between your data source and your S3 bucket.
+
+#### 5. DynamoDB
+
+DynamoDB is a NoSQL document database service that is fully managed. Unlike traditional databases, NoSQL databases, are schema-less. Schema-less simply means that the database doesn't contain a fixed (or rigid) data structure, which offers great flexibility.
+
+NoSQL is great for quickly scale and handle large amounts of data. Traditional database don't handle that type of load or scale that well.
+
+Each row, or record, is called **A Document**
+
+Tips
+
+- DynamoDB can handle more than 10 trillion requests per day.
+- DynamoDB is fully managed serverless as there are no servers to provision, patch, or manage.
+- DynamoDB supports key-value and document data models.
+- DynamoDB synchronously replicates data across three AZs in an AWS Region.
+- DynamoDB supports GET/PUT operations using a primary key.
+- **Global Table** can exists in 2 or more AWS regions with automatic replication.
+
+#### 8. Relational Database Service (RDS)
+
+RDS (or Relational Database Service) is a service that aids in the administration and management of databases. RDS assists with database administrative tasks that include upgrades, patching, installs, backups, monitoring, performance checks, security, etc.
+
+Database Engine Support
+
+- Oracle
+- PostgreSQL
+- MySQL
+- MariaDB
+- SQL Serve
+
+Features
+
+- failover
+- backups
+- restore
+- encryption
+- security
+- monitoring
+- data replication
+- scalability
+
+#### 10. Redshift
+
+Redshift is a cloud data warehousing service to help companies manage big data. Redshift allows you to run fast queries against your data using SQL, ETL, and BI tools. Redshift stores data in a column format to aid in fast querying.
+
+Features:
+
+- Fast query and analysis
+- Not transaction processing
+- Historical data. For example: for an online ordering system, recent transaction placed in relational database, but old orders archived are saved in data warehouse like RedShift
+
+Tips
+
+- Redshift delivers great performance by using machine learning.
+- Redshift Spectrum is a feature that enables you to run queries against data in Amazon S3.
+- Redshift encrypts and keeps your data secure in transit and at rest.
+- Redshift clusters can be isolated using Amazon Virtual Private Cloud (VPC).
+
+#### 12. Why do we need content delivery in the cloud?
+
+A Content Delivery Network (or CDN) speeds up delivery of your static and dynamic web content (like html, images, css, JavaScript logics), by caching content in an Edge Location close to your user base.
+
+Benefits
+The benefits of a CDN includes:
+
+- low latency
+- decreased server load
+- better user experience
+
+#### 13. Cloud Front
+
+CloudFront is used as a global content delivery network (CDN). Cloud Front speeds up the delivery of your content through Amazon's worldwide network of mini-data centers called **Edge Locations**.
+
+![cdn](./docs/images/cdn-01.png)
+
+You can configure how long a item remain cached before refresh, or you can manually expire or remove item from cache when item needs to be changed.
+
+CloudFront works with other AWS services, as shown below, as an origin source for your application:
+
+- Amazon S3
+- Elastic Load Balancing
+- Amazon EC2
+- Lambda@Edge
+- AWS Shield
+
+Tips
+
+- Amazon continuously adds new Edge Locations.
+- CloudFront ensures that end-user requests are served from the closest edge location.
+- CloudFront works with non-AWS origin sources.
+- You can use GeoIP blocking to serve content (or not serve content) to specific countries.
+- Cache control headers determine how frequently CloudFront needs to check the origin for an updated version your file.
+- The maximum size of a single file that can be delivered through Amazon CloudFront is 20 GB.
+
+#### Lesson 4: Security
+
+#### 2. Why do we need security for applications?
+
+Security In The Cloud
+As adoption of cloud services has increased, so has the need for increased security in the cloud. The great thing about cloud security is that it not only protects data, it also protects applications that access the data. Cloud security even protects the infrastructure (like servers) that applications run on.
+
+The way security is delivered depends on the cloud provider you're using and the cloud security options they offer.
+
+Protection:
+
+- Protects data, especially PII (Personally identifiable information such as back account or Social Security Number)
+- Protects applications that access data
+- Protects infrastructure that the application is run on
+
+#### 3. AWS Shield
+
+AWS Shield is a managed DDoS (or Distributed Denial of Service) protection service that safeguards web applications running on AWS.
+
+**DDoS** is an attempt to make a website or application unavailable by overwhelming it with traffic from multiple sources.
+
+AWS Shield is a service that you get "out of the box", it is **always running (automatically)** and is a part of the free standard tier. If you want to use some of the more advanced features, you'll have to utilize the paid tier
+
+#### 4. AWS Web Application Firewall
+
+AWS WAF (or AWS Web Application Firewall) provides a firewall that protects your web applications.
+
+AWS WAF monitors and controls incoming and outgoing traffics based on preset security rules.
+
+WAF can stop common web attacks by reviewing the data being sent to your application and stopping well-known attacks, such as SQL injection and Cross-site scripting.
+
+Tips
+
+- WAF is found under the Security, Identity, & Compliance section on the AWS Management Console.
+- WAF can protect web sites not hosted in AWS through Cloud Front.
+- You can configure CloudFront to present a custom error page when requests are blocked.
+
+#### 5. Identity and Access Management (IAM)
+
+Identity & Access Management (IAM) is an AWS service that allows us to configure who can access our AWS account, services, or even applications running in our account. IAM is a global service and is automatically available across ALL regions.
+
+Security Concepts
+
+- User: An entity to represent a person or services that interacts with services or applications running in your AWS account. An user in AWS consists of a user name and access credentials, like console password, or access key, which includes an access key ID and a secret access key.
+- IAM Group: A collection of users, you can specify permissions for a collection which makes permissions easier to manage.
+- IAM Role: A role is an identity with permissions, or a set of privileges that are not associated with a specific IAM user or IAM group. Role can be attached to a user, and a user can assume a single role temporarily to preform a specific task.
+- Policy: A policy is a way to define granular level permissions and can be attached to users, groups and roles. AWS provides a list of pre-defined policies. Additionally you can create your own custom policies using JSON.
+
+EC2 Security Group is not a part of IAM, and it is different from IAM security group.
+
+- EC2 security groups are associated with an EC2 instance, and act as a built-in firewall for your VM to either allow or deny access.
+- IAM security groups are a collection of users, you can specify permissions for a collection which makes permissions easier to manage.
+
+#### Lesson 5: Networking & Elasticity
+
+#### 2. Why do we need networking in the cloud?
+
+Networks reliably carry loads of data around the globe allowing for the delivery of content and applications with high availability. The network is the foundation of your infrastructure.
+
+Cloud networking includes:
+
+- network architecture
+- network connectivity: includes services that offer reliable and cost-effective ways to route end-users to Internet applications.
+- application delivery
+- global performance
+- delivery
+
+#### 3. Route 53
+
+Route 53 is AWS cloud domain name system (DNS) service that has servers distributed around the globe used to translates human-readable names like www.google.com into the numeric IP addresses like 74.125.21.147.
+
+Features
+
+- scales automatically to manage spikes in DNS queries
+- allows you to register a domain name (or manage an existing)
+- routes internet traffic to the resources for your domain
+- checks the health of your resources, which ensure that your web servers are up and running and offer DNS failover to automatically route your web visotprs to an alternate location to avoid site outrage.
+
+Tips
+
+- Route 53 is found under the Networking & Content Delivery section on the AWS Management Console.
+- Route 53 allows you to route users based on the user’s geographic location.
+
+#### 4. Why do we need elasticity in the cloud?
+
+One of the main benefits of the cloud is that it allows you to stop guessing about capacity when you need to run your applications. Sometimes you buy too much or you don't buy enough to support the running of your applications.
+
+With elasticity, your servers, databases, and application resources can automatically scale up or scale down based on load.
+
+Resources can scale up (or vertically). In Amazon EC2, this can easily be achieved by stopping an instance and resizing it to an instance type that has more RAM, CPU, IO.
+Or you can scale out (or horizontally), which increases the number of resources. An example would be adding more servers.
+
+#### 5. EC2 Auto Scaling
+
+EC2 Auto Scaling is a service that **monitors your EC2 instances** and automatically adjusts by adding or removing EC2 instances based on conditions you define in order to maintain application availability and provide peak performance to your users.
+
+EC2 Auto Scaling works with AWS messaging service like the SNS to alert you when EC2 Auto Scaling is adding or removing your EC2 instances.
+
+AWS Auto Scaling service is different with EC2 Auto Scaling, which allows to scale other services like DynamoDB to automatically scale.
+
+Features
+
+- Automatically scale in and out based on needs.
+- Included automatically with Amazon EC2.
+- Automate how your Amazon EC2 instances are managed.
+
+Tips
+
+- EC2 Auto Scaling is found on the EC2 Dashboard.
+- EC2 Auto Scaling adds instances only when needed, optimizing cost savings.
+- EC2 predictive scaling removes the need for manual adjustment of auto scaling parameters over time.
+
+#### 7. Elastic Load Balancing
+
+Elastic Load Balancing automatically distributes incoming application traffic across multiple servers.
+
+Elastic Load Balancer is a service that:
+
+- Balances load between two or more servers
+- Stands in front of a web server
+- Provides redundancy and performance. Redundancy simply means that if you lose a server, the load balancer will send requests to other working servers. This feature maintains continuous operations in an emergency. Good performance simply means that if a server starts having issues or bottlenecks, the load balancer will add more servers to the pool of available servers. Auto scaling automatically adjusts capacity to maintain a steady state.
+
+#### Lesson 6: Messaging & Container
+
+#### 2. Why do we need messaging in the cloud?
+
+There are often times that users of your applications need to be notified when certain events happen. Notifications, such as text messages or emails can be sent through services in the cloud. The use of the cloud offers benefits like lowered costs, increased storage, and flexibility.
+
+Messaging is a form of notification, it typically occurs between Internet-based applications and devices, one system can send a message to another system.
+
+#### 3. Simple Notification Service (SNS)
+
+Amazon Simple Notification Service (or SNS) is AWS cloud service that allows you to send notifications to the users of your applications. SNS allows you to decouple the notification logic from being embedded in your applications and allows notifications to be published to a large number of subscribers.
+
+An Amazon SNS **topic** is a logical access point that acts as a communication channel. A topic lets you group multiple endpoints (such as AWS Lambda, Amazon SQS, HTTP/S, or an email address).
+
+Features
+
+- SNS uses a publish/subscribe model. In order for your users to be notified, they have to sign up or subscribe first. Subscribers can be a person or another AWS service.
+- SNS can publish messages to Amazon SQS queues, AWS Lambda functions, and HTTP/S webhooks.
+
+Tips
+
+- SNS is found under the Application Integration section on the AWS Management Console.
+- SNS Topic names are limited to 256 characters.
+- A notification can contain only one message.
+- Notifications can be sent to end-users using mobile push, text-message or email.
+
+#### 5. Why do we need queuing technology?
+
+A queue is a data structure that holds requests called messages.
+
+Messages in a queue are commonly processed in order, first in, first out (or FIFO).
+
+Queue supports asynchronous processing, where a user doesn't wait for a response, improves the overall user experience.
+
+Messaging queues improve:
+
+- performance
+- scalability
+- user experience
+
+#### 6. Simple Queue Service (SQS)
+
+Amazon Simple Queue Service (SQS) is a fully managed message queuing service that allows you to integrate queuing functionality in your application, without losing messages.
+
+SQS offers two types of message queues: standard and FIFO.
+
+FIFO:
+
+- Guarantee the ordering of messages
+- Proceed exactly once
+- Proceed in the exact order they were added to the queue.
+
+Features
+
+- send messages
+- store messages
+- receive messages
+
+Tips
+
+- The Simple Queue Service (SQS) is found under the Application Integration on the AWS Management Console.
+- FIFO queues support up to 300 messages per second.
+- FIFO queues guarantee the ordering of messages, and are processed exactly once.
+- **Standard queues offer best-effort ordering but no guarantees**.
+- Standard queues deliver a message at least once, but **occasionally more than one copy of a message is delivered**.
+
+#### 9. Why do we need containers?
+
+Enterprises are adopting container technology at an explosive rate.
+
+A container consists of everything an application needs to run: the application itself, and its dependencies (e.g. libraries, utilities, configuration files), all bundled into one package. It is very easy to move from environment to other environment (say from Dev to UAT to Prod), don't have to rebuild, just move the entire container.
+
+Each container is an independent component that can run on its own and be moved from environment to environment.
+
+#### 10. Elastic Container Service (ECS)
+
+ECS is an orchestration service used for automating deployment, scaling, and managing of your containerized applications. ECS works well with Docker containers by:
+
+- launching and stopping Docker containers
+- scaling your applications
+- querying the state of your applications
+
+**Task Definition** is an application blueprint that describe the container information for your application.
+A **cluster** is a set of container instances running the container agent.
+
+Tips
+
+- ECS is under the Compute section on the AWS Management Console.
+- You can schedule long-running applications, services, and batch processeses using ECS.
+- Docker is the only container platform supported by Amazon ECS.
+
+#### Lesson 7: AWS Management
+
+#### 2. Why do we need logging and auditing in the cloud?
+
+Logging provides visibility into your cloud resources and applications. For applications that run in the cloud, you will need access to logging and auditing services to help you proactively monitor your resources and applications.
+
+Logging allows you to answer important questions like:
+
+How is this server performing?
+What is the current load on the server?
+What is the root cause of an application error that a user is seeing?
+What is the path that leads to this error?
+
+#### 3. Cloud Trail
+
+Cloud Trail allows you to **audit (or review) everything that occurs in your AWS account**. Cloud Trail does this by recording all the AWS API calls occurring in your account and delivering a log file to you.
+
+Features
+CloudTrail provides event history of your AWS account activity, including:
+
+- who has logged in
+- services that were accessed
+- actions performed
+- parameters for the actions
+- responses returned
+
+This includes actions taken **through the AWS Management Console, AWS SDKs, command line tools, and other AWS services**.
+
+Tips
+
+- Cloud Trail is found under the Management & Governance section on the AWS Management Console.
+- CloudTrail shows results for the last 90 days.
+- Cloud Trail events can only be process by one trail for free.
+- You can create up to five trails in an AWS region.
+
+#### 5. Cloud Watch
+
+Cloud Watch is a service that monitors resources and applications that run on AWS by collecting data in the form of logs, metrics, and events.
+
+Features
+There are several useful features:
+
+- Collect and track metrics
+- Collect and monitor log files
+- Set alarms and create triggers to run your AWS resources
+- React to changes in your AWS resources
+
+Tips
+
+- CloudWatch is found under the Management & Governance section on the AWS Management Console.
+- Metrics are provided automatically for a number of AWS products and services.
+
+#### 8. What is Infrastructure as Code and why do we need it?
+
+Infrastructure as Code allows you to describe and provision all the infrastructure resources in your cloud environment. You can stand up servers, databases, runtime parameters, resources, etc. based on scripts that you write. Infrastructure as Code is a time-saving feature because it allows you to provision (or stand up) resources in a reproducible way.
+
+#### 9. Cloud Formation
+
+AWS Cloud Formation allows you to model your entire infrastructure in a text file template allowing you to provision AWS resources based on the scripts you write.
+
+Tips
+
+- Cloud Formation is found under the Management & Governance section on the AWS Management Console.
+- Cloud Formation templates are written using JSON or YAML.
+- You can still individually manage AWS resources that are part of a CloudFormation stack.
+
+#### 12. AWS Command Line Interface (CLI)
+
+The AWS CLI (or Command Line Interface) allows you to access and control services running in your AWS account from the command line. To use the CLI, simply download, install, and configure it.
+
+The AWS CLI allows you to work with AWS services in a programmatic manner.
