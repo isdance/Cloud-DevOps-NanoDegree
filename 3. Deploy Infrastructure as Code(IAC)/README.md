@@ -94,6 +94,8 @@ Additional resources:
 
 #### 11. Getting Started With CloudFormation Script
 
+Having scripts specific for networking and other scripts specific to EC2 Servers or Databases keep your scripts small, and easily shared across teams with different skill sets, such as database administrators and network experts.
+
 YAML and JSON
 
 - YAML and JSON file formats are both supported in CloudFormation, but YAML is the industry preferred version that’s used for AWS and other cloud providers (Azure, Google Cloud Platform).
@@ -111,3 +113,51 @@ Glossary in CloudFormation scripts
 
 Best practices
 **Coding best practice**: Create separate files to organize your code. You can either create separate files for similar resources or create files for each developer who uses those resources.
+
+#### 12. Testing CloudFormation
+
+Our first cloudformation template:
+
+```yaml
+Description: >
+  Yang Gu / Udacity
+  This template deploys a VPC.
+Resources:
+  UdacityVPC: # arbitrary name for a resource
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+```
+
+For creating stack:
+
+```
+aws cloudFormation create-stack --stack-name myFirstStack --template-body file://testcfn.yml
+```
+
+For updating stack:
+
+```
+aws cloudFormation update-stack --stack-name myFirstStack --template-body file://testcfn.yml
+```
+
+For deleting stack:
+
+```
+aws cloudFormation delete-stack --stack-name myFirstStack
+```
+
+also can be in bash script
+
+```bash
+#!/bin/bash
+
+aws cloudformation delete-stack --stack-name $1
+```
+
+run
+
+```
+./test_delete_stack.sh myFirstStack
+```
