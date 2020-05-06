@@ -362,3 +362,81 @@ Resources:
 
 You can verify it in CloudFormation and see if there is any error:
 ![Network](./docs/images/step-01-01.png)
+
+Add a Named Profile in your aws config
+
+```
+aws configure --profile udacity
+
+AWS Access Key ID [None]: AKIA3RB******5EG5F
+AWS Secret Access Key [None]: **********************
+Default region name [None]: us-west-2
+Default output format [None]:
+```
+
+Then if you check your `./aws/config`
+
+```
+[profile udacity]
+region = us-west-2
+
+```
+
+and `./aws/credentials`, you will see something like:
+
+```
+[udacity]
+aws_access_key_id = AKIA3RB******5EG5F
+aws_secret_access_key = **********************
+```
+
+And our `create-stack.sh` will be using this profile
+
+```sh
+aws cloudformation create-stack \
+--profile udacity \
+--stack-name $1 \
+--template-body file://$2 \
+--parameters file://$3 \
+--region=us-west-2
+```
+
+Step 02: Adding an Internet Gateway (IGW) to VPC
+We need 2 resources, an Internet Gateway, and an Internet Gateway Attachment, which will attach the Internet Gateway to a VPC
+
+```yaml
+Parameters:
+  EnvironmentName:
+    Description: An environment name that will be prefixed to resources
+    Type: String
+
+  VpcCIDR:
+    Description: Please enter the IP range (CIDR notation) for this VPC.
+    Type: String
+    Default: 10.0.0.0/16
+
+Resources:
+  myVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+
+  MyInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+  MyInternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref myVPC
+      InternetGatewayId: !Ref MyInternetGateway
+```
+
+If we copy the yaml file into CloudFormation Designer
+![Network](./docs/images/step-02-01.png)
