@@ -14,25 +14,96 @@ Parameters:
     Description: Please enter the IP range (CIDR notation) for this VPC.
     Type: String
     Default: 10.0.0.0/16
+  
+  PublicSubnet1CIDR:
+        Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+        Type: String
+        Default: 10.0.0.0/24
+
+  PublicSubnet2CIDR:
+      Description: Please enter the IP range (CIDR notation) for the public subnet in the second Availability Zone
+      Type: String
+      Default: 10.0.1.0/24
+
+  PrivateSubnet1CIDR:
+      Description: Please enter the IP range (CIDR notation) for the private subnet in the first Availability Zone
+      Type: String
+      Default: 10.0.2.0/24
+
+  PrivateSubnet2CIDR:
+      Description: Please enter the IP range (CIDR notation) for the private subnet in the second Availability Zone
+      Type: String
+      Default: 10.0.3.0/24
 
 Resources:
-  myVPC:
+  MyVPC:
+    Description: Main VPC to host my subnets
     Type: AWS::EC2::VPC
     Properties:
       CidrBlock: !Ref VpcCIDR
-      EnableDnsSupport: true
+      EnableDnsHostnames: true
       Tags:
         - Key: Name
           Value: !Ref EnvironmentName
 
   MyInternetGateway:
+    Description: To Provide Internet Access to MyVPC
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
         - Key: Name
           Value: !Ref EnvironmentName
   MyInternetGatewayAttachment:
+    Description: To attach MyInternetGateway to MyVPC
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
-      VpcId: !Ref myVPC
+      VpcId: !Ref MyVPC
       InternetGatewayId: !Ref MyInternetGateway
+
+  PublicSubnet1:
+    Description: Public subnet hosted in Availability Zone 1
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      AvailabilityZone: !Select [ 0, !GetAZs "" ] 
+      CidrBlock: !Ref PublicSubnet1CIDR
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Public Subnet (AZ1)
+
+  PublicSubnet2:
+    Description: Public subnet hosted in Availability Zone 2
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC 
+      AvailabilityZone: !Select [ 1, !GetAZs "" ] 
+      CidrBlock: !Ref PublicSubnet2CIDR
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Public Subnet (AZ2)
+
+  PrivateSubnet1:
+    Description: Private subnet hosted in Availability Zone 1
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC 
+      AvailabilityZone: !Select [ 0, !GetAZs "" ] 
+      CidrBlock: !Ref PrivateSubnet1CIDR
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Private Subnet (AZ1)
+
+  PrivateSubnet2:
+    Description: Private subnet hosted in Availability Zone 2
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC 
+      AvailabilityZone: !Select [ 1, !GetAZs "" ] 
+      CidrBlock: !Ref PrivateSubnet2CIDR
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Private Subnet (AZ2)

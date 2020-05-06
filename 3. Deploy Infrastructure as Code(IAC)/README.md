@@ -120,7 +120,7 @@ Our first cloudformation template:
 
 ```yaml
 Description: >
-  Yang Gu / Udacity
+  Author .. / Udacity
   This template deploys a VPC.
 Resources:
   UdacityVPC: # arbitrary name for a resource
@@ -416,7 +416,8 @@ Parameters:
     Default: 10.0.0.0/16
 
 Resources:
-  myVPC:
+  MyVPC:
+    Description: Main VPC to host my subnets
     Type: AWS::EC2::VPC
     Properties:
       CidrBlock: !Ref VpcCIDR
@@ -426,17 +427,192 @@ Resources:
           Value: !Ref EnvironmentName
 
   MyInternetGateway:
+    Description: To Provide Internet Access
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
         - Key: Name
           Value: !Ref EnvironmentName
   MyInternetGatewayAttachment:
+    Description: To attach MyInternetGateway to MyVPC
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
-      VpcId: !Ref myVPC
+      VpcId: !Ref MyVPC
       InternetGatewayId: !Ref MyInternetGateway
 ```
 
 If we copy the yaml file into CloudFormation Designer
 ![Network](./docs/images/step-02-01.png)
+
+#### 4. NAT Gateway And Subnets
+
+Now we have a VPC with Internet access. But there is no subnets in it yet.
+
+Step 03: Adding Subnets to existing VPC
+
+```yaml
+# more code omitted
+PublicSubnet1CIDR:
+  Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+  Type: String
+  Default: 10.0.0.0/24
+
+PublicSubnet2CIDR:
+  Description: Please enter the IP range (CIDR notation) for the public subnet in the second Availability Zone
+  Type: String
+  Default: 10.0.1.0/24
+
+PrivateSubnet1CIDR:
+  Description: Please enter the IP range (CIDR notation) for the private subnet in the first Availability Zone
+  Type: String
+  Default: 10.0.2.0/24
+
+PrivateSubnet2CIDR:
+  Description: Please enter the IP range (CIDR notation) for the private subnet in the second Availability Zone
+  Type: String
+  Default: 10.0.3.0/24
+
+PublicSubnet1:
+  Description: Public subnet hosted in Availability Zone 1
+  Type: AWS::EC2::Subnet
+  Properties:
+    VpcId: !Ref MyVPC # which VPC this subnet belongs to
+    AvailabilityZone: !Select [0, !GetAZs ""] # Select a value from the List, Returned by Fn::GetAZs function
+    CidrBlock: !Ref PublicSubnet1CIDR
+    MapPublicIpOnLaunch: true
+    Tags:
+      - Key: Name
+        Value: !Sub ${EnvironmentName} Public Subnet (AZ1)
+
+PublicSubnet2:
+  Description: Public subnet hosted in Availability Zone 2
+  Type: AWS::EC2::Subnet
+  Properties:
+    VpcId: !Ref MyVPC # which VPC this subnet belongs to
+    AvailabilityZone: !Select [1, !GetAZs ""] # Select a value from the List, Returned by Fn::GetAZs function
+    CidrBlock: !Ref PublicSubnet2CIDR
+    MapPublicIpOnLaunch: true
+    Tags:
+      - Key: Name
+        Value: !Sub ${EnvironmentName} Public Subnet (AZ2)
+
+PrivateSubnet1:
+  Description: Private subnet hosted in Availability Zone 1
+  Type: AWS::EC2::Subnet
+  Properties:
+    VpcId: !Ref MyVPC # which VPC this subnet belongs to
+    AvailabilityZone: !Select [0, !GetAZs ""] # Select a value from the List, Returned by Fn::GetAZs function
+    CidrBlock: !Ref PrivateSubnet1CIDR
+    MapPublicIpOnLaunch: false
+    Tags:
+      - Key: Name
+        Value: !Sub ${EnvironmentName} Private Subnet (AZ1)
+
+PrivateSubnet2:
+  Description: Private subnet hosted in Availability Zone 2
+  Type: AWS::EC2::Subnet
+  Properties:
+    VpcId: !Ref MyVPC # which VPC this subnet belongs to
+    AvailabilityZone: !Select [1, !GetAZs ""] # Select a value from the List, Returned by Fn::GetAZs function
+    CidrBlock: !Ref PrivateSubnet2CIDR
+    MapPublicIpOnLaunch: false
+    Tags:
+      - Key: Name
+        Value: !Sub ${EnvironmentName} Private Subnet (AZ2)
+# more code omitted
+```
+
+1. Syntax for AWS::EC2::Subnet
+
+[AWS::EC2::Subnet User Guide](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-subnet.html)
+
+```yaml
+Type: AWS::EC2::Subnet
+Properties:
+  AssignIpv6AddressOnCreation: Boolean
+  AvailabilityZone: String # The Availability Zone of the subnet.
+  CidrBlock: String # The IPv4 CIDR block assigned to the subnet.
+  Ipv6CidrBlock: String
+  MapPublicIpOnLaunch: Boolean # Indicates whether instances launched in this subnet receive a public IPv4 address.
+  Tags:
+    - Tag
+  VpcId: String # Required!! The ID of the VPC the subnet is in.
+```
+
+2. Fn::Select, Fn::GetAZs and Fn::Sub functions
+
+##### Fn::Select
+
+The intrinsic function `Fn::Select` returns a single object from a list of objects by index.
+Syntax
+
+```
+Fn::Select: [ index, listOfObjects ]
+
+or
+
+!Select [ index, listOfObjects ]
+```
+
+##### Fn::GetAZs
+
+The intrinsic function `Fn::GetAZs` returns an array that lists Availability Zones for a specified region.
+
+Syntax
+
+```
+Fn::GetAZs: region
+
+or
+
+!GetAZs region
+```
+
+##### Fn::Sub
+
+[Fn::Sub](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-sub.html)
+
+The intrinsic function `Fn::Sub` substitutes variables in an input string with values that you specify.
+In your templates, you can use this function to construct commands or outputs that include values that aren't available until you create or update a stack.
+
+Syntax
+
+```
+Fn::Sub:
+  - String
+  - Var1Name: Var1Value
+    Var2Name: Var2Value
+
+or
+
+!Sub
+  - String
+  - Var1Name: Var1Value
+    Var2Name: Var2Value
+```
+
+Examples:
+Fn::Sub with a Mapping
+The following example uses a mapping to substitute the \${Domain} variable with the resulting value from the Ref function.
+
+```yaml
+Name: !Sub
+  - www.${Domain}
+  - { Domain: !Ref RootDomainName }
+```
+
+Fn::Sub without a Mapping
+The following example uses Fn::Sub with the AWS::Region and AWS::AccountId pseudo parameters and the vpc resource logical ID to create an Amazon Resource Name (ARN) for a VPC.
+
+```yaml
+!Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:vpc/${vpc}"
+```
+
+In our template:
+
+`AvailabilityZone: !Select [1, !GetAZs ""]` Fn::Select function will get the element from a given list with a specified index. Fn::GetAZs will return the list of the Availability Zones resides in your Region. For example your Region is us-west-2, then the AZs list will have 4 values, and we just use the first and second value, which are us-west-2a, us-west-2b
+
+`!Sub ${EnvironmentName} Private Subnet (AZ2)` replace the \${EnvironmentName} with value of EnvironmentName Parameter. In our example, the replaced value will be `UdacityProject Public Subnet (AZ2)`
+
+If we copy the yaml file into CloudFormation Designer
+![Network](./docs/images/step-03-01.png)
