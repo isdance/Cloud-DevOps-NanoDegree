@@ -327,3 +327,11 @@ Visit the [AWS Reference Architecture Page](https://aws.amazon.com/architecture/
 A good example here:
 
 [Hosting WordPress on AWS](https://github.com/aws-samples/aws-refarch-wordpress) is a great example to help you understand how auto-scaling servers keep track of non-database data, such as images, config files, and similar objects, in this particular case by means of external storage (EFS) mounted to the EC2 Servers -- much like the way you would have your personal files and photos in an external USB drive that you can connect to any computer when you need to access them.
+
+#### Lesson 3: Networking Infrastructure
+
+#### Introduction
+
+Project Diagram
+
+![Project Diagram](./docs/images/3.project-diagram.png)
