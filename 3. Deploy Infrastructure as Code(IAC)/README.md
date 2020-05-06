@@ -616,3 +616,105 @@ In our template:
 
 If we copy the yaml file into CloudFormation Designer
 ![Network](./docs/images/step-03-01.png)
+
+Step 04: Add NAT
+
+##### AWS::EC2::EIP
+
+[AWS::EC2::EIP](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-eip.html)
+
+Syntax
+
+```yaml
+Type: AWS::EC2::EIP
+Properties:
+  Domain: String # Set to vpc to allocate the address for use with instances in a VPC.
+  InstanceId: String # The ID of the instance.
+  PublicIpv4Pool: String # The ID of an address pool that you own. Use this parameter to let Amazon EC2 select an address from the address pool.
+  Tags:
+    - Tag
+```
+
+Return Values
+**Ref**
+When you pass the logical ID of this resource to the intrinsic Ref function, Ref returns the Elastic IP address.
+
+For more information about using the Ref function, see Ref.
+
+**Fn::GetAtt**
+The `Fn::GetAtt` intrinsic function returns a value for a specified attribute of this type. The following are the available attributes and sample return values.
+
+For more information about using the Fn::GetAtt intrinsic function, see Fn::GetAtt.
+
+`AllocationId`
+The ID that AWS assigns to represent the allocation of the address for use with Amazon VPC. This is returned only for VPC elastic IP addresses. For example, eipalloc-5723d13e.
+
+##### AWS::EC2::NatGateway
+
+[AWS::EC2::NatGateway](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-natgateway.html)
+
+Specifies a network address translation (NAT) gateway in the specified public subnet.
+
+Syntax
+
+```yaml
+Type: AWS::EC2::NatGateway
+Properties:
+  AllocationId: String # The allocation ID of an Elastic IP address to associate with the NAT gateway. If the Elastic IP address is associated with another resource, you must first disassociate it.
+  SubnetId: String # The public subnet in which to create the NAT gateway.
+  Tags:
+    - Tag
+```
+
+Return Values
+**Ref**
+When you pass the logical ID of this resource to the intrinsic Ref function, Ref returns the resource name. For example, nat-0a12bc456789de0fg.
+
+```yaml
+# more code omitted
+
+MyInternetGatewayAttachment:
+  Description: To attach MyInternetGateway to MyVPC
+  Type: AWS::EC2::VPCGatewayAttachment
+  Properties:
+    VpcId: !Ref MyVPC
+    InternetGatewayId: !Ref MyInternetGateway
+
+# more code omitted
+
+NatGateway1EIP:
+  Description: Elastic IP attach to a VPC
+  Type: AWS::EC2::EIP
+  DependsOn: MyInternetGatewayAttachment
+  Properties:
+    Domain: MyVPC
+NatGateway2EIP:
+  Description: Elastic IP attach to a VPC
+  Type: AWS::EC2::EIP
+  DependsOn: MyInternetGatewayAttachment
+  Properties:
+    Domain: MyVPC
+
+NatGateway1:
+  Description: Nat Gateway for Public Subnet 1
+  Type: AWS::EC2::NatGateway
+  Properties:
+    AllocationId: !GetAtt NatGateway1EIP.AllocationId # The allocation ID of an Elastic IP address to associate with the NAT gateway
+    SubnetId: !Ref PublicSubnet1 # Logical Id of the attaching subnet
+NatGateway2:
+  Description: Nat Gateway for Public Subnet 2
+  Type: AWS::EC2::NatGateway
+  Properties:
+    AllocationId: !GetAtt NatGateway2EIP.AllocationId # The allocation ID of an Elastic IP address to associate with the NAT gateway
+    SubnetId: !Ref PublicSubnet2 # Logical Id of the attaching subnet
+
+# more code omitted
+```
+
+Here we create 2 Elastic IP address, they will NOT be created before `MyInternetGatewayAttachment` is complete, as they are `DependsOn` on `MyInternetGatewayAttachment`. This means once `MyInternetGatewayAttachment` is done, and then create 2 EIP
+
+If we copy the yaml file into CloudFormation Designer
+![Network](./docs/images/step-04-01.png)
+
+From above image, you can see the 4 subnets are not connected yet. We need routing between these subnets.
+

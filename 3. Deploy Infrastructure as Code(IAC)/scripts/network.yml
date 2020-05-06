@@ -14,26 +14,26 @@ Parameters:
     Description: Please enter the IP range (CIDR notation) for this VPC.
     Type: String
     Default: 10.0.0.0/16
-  
+
   PublicSubnet1CIDR:
-        Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
-        Type: String
-        Default: 10.0.0.0/24
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: 10.0.0.0/24
 
   PublicSubnet2CIDR:
-      Description: Please enter the IP range (CIDR notation) for the public subnet in the second Availability Zone
-      Type: String
-      Default: 10.0.1.0/24
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the second Availability Zone
+    Type: String
+    Default: 10.0.1.0/24
 
   PrivateSubnet1CIDR:
-      Description: Please enter the IP range (CIDR notation) for the private subnet in the first Availability Zone
-      Type: String
-      Default: 10.0.2.0/24
+    Description: Please enter the IP range (CIDR notation) for the private subnet in the first Availability Zone
+    Type: String
+    Default: 10.0.2.0/24
 
   PrivateSubnet2CIDR:
-      Description: Please enter the IP range (CIDR notation) for the private subnet in the second Availability Zone
-      Type: String
-      Default: 10.0.3.0/24
+    Description: Please enter the IP range (CIDR notation) for the private subnet in the second Availability Zone
+    Type: String
+    Default: 10.0.3.0/24
 
 Resources:
   MyVPC:
@@ -65,7 +65,7 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref MyVPC
-      AvailabilityZone: !Select [ 0, !GetAZs "" ] 
+      AvailabilityZone: !Select [0, !GetAZs ""]
       CidrBlock: !Ref PublicSubnet1CIDR
       MapPublicIpOnLaunch: true
       Tags:
@@ -76,8 +76,8 @@ Resources:
     Description: Public subnet hosted in Availability Zone 2
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId: !Ref MyVPC 
-      AvailabilityZone: !Select [ 1, !GetAZs "" ] 
+      VpcId: !Ref MyVPC
+      AvailabilityZone: !Select [1, !GetAZs ""]
       CidrBlock: !Ref PublicSubnet2CIDR
       MapPublicIpOnLaunch: true
       Tags:
@@ -88,8 +88,8 @@ Resources:
     Description: Private subnet hosted in Availability Zone 1
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId: !Ref MyVPC 
-      AvailabilityZone: !Select [ 0, !GetAZs "" ] 
+      VpcId: !Ref MyVPC
+      AvailabilityZone: !Select [0, !GetAZs ""]
       CidrBlock: !Ref PrivateSubnet1CIDR
       MapPublicIpOnLaunch: true
       Tags:
@@ -100,10 +100,37 @@ Resources:
     Description: Private subnet hosted in Availability Zone 2
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId: !Ref MyVPC 
-      AvailabilityZone: !Select [ 1, !GetAZs "" ] 
+      VpcId: !Ref MyVPC
+      AvailabilityZone: !Select [1, !GetAZs ""]
       CidrBlock: !Ref PrivateSubnet2CIDR
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName} Private Subnet (AZ2)
+
+  NatGateway1EIP:
+    Description: Elastic IP attach to a VPC
+    Type: AWS::EC2::EIP
+    DependsOn: MyInternetGatewayAttachment
+    Properties:
+      Domain: MyVPC
+  NatGateway2EIP:
+    Description: Elastic IP attach to a VPC
+    Type: AWS::EC2::EIP
+    DependsOn: MyInternetGatewayAttachment
+    Properties:
+      Domain: MyVPC
+      
+
+  NatGateway1:
+    Description: Nat Gateway for Public Subnet 1
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGateway1EIP.AllocationId
+      SubnetId: !Ref PublicSubnet1 # Logical Id of the attaching subnet
+  NatGateway2:
+    Description: Nat Gateway for Public Subnet 2
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGateway2EIP.AllocationId
+      SubnetId: !Ref PublicSubnet2 # Logical Id of the attaching subnet
