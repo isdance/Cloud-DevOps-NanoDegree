@@ -334,4 +334,31 @@ A good example here:
 
 Project Diagram
 
-![Project Diagram](./docs/images/3.project-diagram.png)
+![Project Diagram](./docs/images/AWSWebApp.jpeg)
+
+Step 01: Creating a VPC
+
+```yaml
+Parameters:
+  EnvironmentName:
+    Description: An environment name that will be prefixed to resources
+    Type: String
+
+  VpcCIDR:
+    Description: Please enter the IP range (CIDR notation) for this VPC.
+    Type: String
+    Default: 10.0.0.0/16
+
+Resources:
+  myVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+```
+
+You can verify it in CloudFormation and see if there is any error:
+![Network](./docs/images/step-01-01.png)
