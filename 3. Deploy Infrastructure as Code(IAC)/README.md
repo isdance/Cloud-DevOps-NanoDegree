@@ -336,7 +336,7 @@ Project Diagram
 
 ![Project Diagram](./docs/images/AWSWebApp.jpeg)
 
-Step 01: Creating a VPC
+**Step 01: Creating a VPC**
 
 ```yaml
 Parameters:
@@ -401,7 +401,7 @@ aws cloudformation create-stack \
 --region=us-west-2
 ```
 
-Step 02: Adding an Internet Gateway (IGW) to VPC
+**Step 02: Adding an Internet Gateway (IGW) to VPC**
 We need 2 resources, an Internet Gateway, and an Internet Gateway Attachment, which will attach the Internet Gateway to a VPC
 
 ```yaml
@@ -448,7 +448,7 @@ If we copy the yaml file into CloudFormation Designer
 
 Now we have a VPC with Internet access. But there is no subnets in it yet.
 
-Step 03: Adding Subnets to existing VPC
+**Step 03: Adding Subnets to existing VPC**
 
 ```yaml
 # more code omitted
@@ -617,7 +617,7 @@ In our template:
 If we copy the yaml file into CloudFormation Designer
 ![Network](./docs/images/step-03-01.png)
 
-Step 04: Add NAT
+**Step 04: Add NAT**
 
 ##### AWS::EC2::EIP
 
@@ -718,3 +718,282 @@ If we copy the yaml file into CloudFormation Designer
 
 From above image, you can see the 4 subnets are not connected yet. We need routing between these subnets.
 
+#### 5. Routing
+
+##### AWS::EC2::RouteTable
+
+[AWS::EC2::RouteTable](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-route-table.html)
+
+Specifies a route table for a specified VPC. After you create a route table, you can add routes and associate the table with a subnet.
+
+Syntax
+
+```yaml
+Type: AWS::EC2::RouteTable
+Properties:
+  Tags:
+    - Tag
+  VpcId: String # required. The ID of the VPC.
+```
+
+Return Values
+**Ref**
+When you pass the logical ID of this resource to the intrinsic Ref function, Ref returns the ID of the route table.
+
+##### AWS::EC2::Route
+
+[AWS::EC2::Route](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-route.html)
+
+Specifies a route in a route table within a VPC.
+
+Syntax
+
+```yaml
+Type: AWS::EC2::Route
+Properties:
+  DestinationCidrBlock: String # The IPv4 CIDR block used for the destination match.
+  DestinationIpv6CidrBlock: String
+  EgressOnlyInternetGatewayId: String
+  GatewayId: String # The ID of an internet gateway or virtual private gateway attached to your VPC.
+  InstanceId: String # The ID of a NAT instance in your VPC.
+  NatGatewayId: String # The ID of a NAT gateway.
+  NetworkInterfaceId: String # The ID of the network interface.
+  RouteTableId: String # Required. The ID of the route table. The routing table must be associated with the same VPC that the virtual private gateway is attached to.
+  TransitGatewayId: String
+  VpcPeeringConnectionId: String
+```
+
+Return Values
+**Ref**
+When you pass the logical ID of this resource to the intrinsic Ref function, Ref returns the ID of the route.
+
+##### AWS::EC2::SubnetRouteTableAssociation
+
+[AWS::EC2::SubnetRouteTableAssociation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-subnet-route-table-assoc.html)
+
+Associates a subnet with a route table. The subnet and route table must be in the same VPC.
+
+Syntax
+
+```yaml
+Type: AWS::EC2::SubnetRouteTableAssociation
+Properties:
+  RouteTableId: String # Required. The ID of the route table.
+  SubnetId: String # Required. The ID of the subnet.
+```
+
+Return Values
+**Ref**
+When you pass the logical ID of this resource to the intrinsic Ref function, Ref returns the ID of the subnet route table association.
+
+**Step 05: Create route table, add route, and associate it with a subnet.**
+
+For public routing, we created a routing table, then added a default/catch all route, the DestinationCidrBlock property is used for destination matching and a `wildcard address` `(0.0.0/0)` to reference all traffic. So in the following example, when we use the wildcard address `0.0.0.0/0`, we are saying for any address that comes through this route, send it to the referenced `GatewayId`.
+
+The `local` route which is inside the VPC `10.0.0.0/16` will take precedence. This is because routes go from very specific to the least as specific, therefore, `10.0.0.0/16` route is more specific, and hence will take precedence.
+
+Also we need to create a subnet association between this route table, and a subnet.
+
+![Routing](./docs/images/step-05-01.png)
+
+```yaml
+# more code omitted
+
+PublicRouteTable:
+  Type: AWS::EC2::RouteTable
+  Properties:
+    VpcId: !Ref MyVPC
+    Tags:
+      - Key: Name
+        Value: !Sub ${EnvironmentName} Public Routes
+
+DefaultPublicRoute:
+  Type: AWS::EC2::Route
+  DependsOn: MyInternetGatewayAttachment
+  Properties:
+    RouteTableId: !Ref PublicRouteTable
+    DestinationCidrBlock: 0.0.0.0/0
+    GatewayId: !Ref MyInternetGateway
+
+PublicRouteTableAssociation1:
+  Type: AWS::EC2::SubnetRouteTableAssociation
+  Properties:
+    RouteTableId: !Ref PublicRouteTable
+    SubnetId: !Ref PublicSubnet1
+# more code omitted
+```
+
+And for Private Route Tables:
+
+```yaml
+# more code omitted
+
+PrivateRouteTable1:
+  Type: AWS::EC2::RouteTable
+  Properties:
+    VpcId: !Ref MyVPC
+    Tags:
+      - Key: Name
+        Value: !Sub ${EnvironmentName} Private Routes (AZ1)
+
+DefaultPrivateRoute1:
+  Type: AWS::EC2::Route
+  Properties:
+    RouteTableId: !Ref PrivateRouteTable1
+    DestinationCidrBlock: 0.0.0.0/0
+    NatGatewayId: !Ref NatGateway1
+
+PrivateRouteTable1Association:
+  Type: AWS::EC2::SubnetRouteTableAssociation
+  Properties:
+    RouteTableId: !Ref PrivateRouteTable1
+    SubnetId: !Ref PrivateSubnet1
+
+PrivateRouteTable2:
+  Type: AWS::EC2::RouteTable
+  Properties:
+    VpcId: !Ref MyVPC
+    Tags:
+      - Key: Name
+        Value: !Sub ${EnvironmentName} Private Routes (AZ2)
+
+DefaultPrivateRoute2:
+  Type: AWS::EC2::Route
+  Properties:
+    RouteTableId: !Ref PrivateRouteTable2
+    DestinationCidrBlock: 0.0.0.0/0
+    NatGatewayId: !Ref NatGateway2
+
+PrivateRouteTable2Association:
+  Type: AWS::EC2::SubnetRouteTableAssociation
+  Properties:
+    RouteTableId: !Ref PrivateRouteTable2
+    SubnetId: !Ref PrivateSubnet2
+# more code omitted
+```
+
+Note is private route table, similarly we create a route table, add some routes and associate it with a subnet. However a big difference between a public route table and private route table is, in private route table, we setup `ALL` route to point to a NAT Gateway `NatGatewayId: !Ref NatGateway2`. while in in public route table, we setup `ALL` route to point to a Internet Gateway `GatewayId: !Ref MyInternetGateway`.
+
+Glossary
+Routing: Routing is the action of applying routing rules to your network, in this case, to your VPC.
+Routing rule: Resources follow the routing rule, which defines what resource has access to communicate with another resource. It blocks traffic from resources that do not follow the routing rule.
+
+#### 6. Outputs
+
+Outputs are optional but are very useful if there are output values you need to:
+
+- import into another stack
+- return in a response
+- view in AWS console
+
+Syntax
+
+```yaml
+Outputs:
+  Logical ID:
+    Description: Information about the value
+    Value: Value to return
+    Export:
+      Name: Value to export
+```
+
+Join Function
+You can use the join function to combine a group of values. The syntax requires you provide a delimiter and a list of values you want appended.
+
+Join function syntax:
+
+```
+Fn::Join: [ delimiter, [ comma-delimited list of values ] ]
+```
+
+In the following example we are using !Join to combine our subnets before returning their values:
+
+```yaml
+PublicSubnets:
+  Description: A list of the public subnets
+  Value: !Join [",", [!Ref PublicSubnet1, !Ref PublicSubnet2]]
+  Export:
+    Name: !Sub ${EnvironmentName}-PUB-NETS
+```
+
+**Step 06: Expose the resources we have created so far via `Outputs`**
+
+```yaml
+# more code omitted
+
+Outputs:
+  VPC:
+    Description: A reference to the created VPC
+    Value: !Ref MyVPC
+    Export:
+      Name: !Sub ${EnvironmentName}-VPCID
+
+  VPCPublicRouteTable:
+    Description: Public Routing
+    Value: !Ref PublicRouteTable
+    Export:
+      Name: !Sub ${EnvironmentName}-PUB-RT
+
+  VPCPrivateRouteTable1:
+    Description: Private Routing AZ1
+    Value: !Ref PrivateRouteTable1
+    Export:
+      Name: !Sub ${EnvironmentName}-PRI1-RT
+
+  VPCPrivateRouteTable2:
+    Description: Private Routing AZ2
+    Value: !Ref PrivateRouteTable2
+    Export:
+      Name: !Sub ${EnvironmentName}-PRI2-RT
+
+  PublicSubnets:
+    Description: A list of the public subnets
+    Value: !Join [",", [!Ref PublicSubnet1, !Ref PublicSubnet2]]
+    Export:
+      Name: !Sub ${EnvironmentName}-PUB-NETS
+
+  PrivateSubnets:
+    Description: A list of the private subnets
+    Value: !Join [",", [!Ref PrivateSubnet1, !Ref PrivateSubnet2]]
+    Export:
+      Name: !Sub ${EnvironmentName}-PRIV-NETS
+
+  PublicSubnet1:
+    Description: A reference to the public subnet in the 1st Availability Zone
+    Value: !Ref PublicSubnet1
+    Export:
+      Name: !Sub ${EnvironmentName}-PUB1-SN
+
+  PublicSubnet2:
+    Description: A reference to the public subnet in the 2nd Availability Zone
+    Value: !Ref PublicSubnet2
+    Export:
+      Name: !Sub ${EnvironmentName}-PUB2-SN
+
+  PrivateSubnet1:
+    Description: A reference to the private subnet in the 1st Availability Zone
+    Value: !Ref PrivateSubnet1
+    Export:
+      Name: !Sub ${EnvironmentName}-PRI1-SN
+
+  PrivateSubnet2:
+    Description: A reference to the private subnet in the 2nd Availability Zone
+    Value: !Ref PrivateSubnet2
+    Export:
+      Name: !Sub ${EnvironmentName}-PRI2-SN
+# more code omitted
+```
+
+And all outputs and their value:
+![Outputs](./docs/images/step-06-01.png)
+
+#### Summary
+
+As this lesson comes to an end, now you should be able to ...
+
+- Describe the syntax of the CloudFormation code that builds the infrastructure
+- Build the following resources -
+  - Virtual Private Cloud and subnets
+  - Internet gateway and NAT gateway
+  - Route table
+- Export the stack output
