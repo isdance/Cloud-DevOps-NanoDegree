@@ -1570,3 +1570,36 @@ In the above example we specify the following:
 - The protocol the load balancer uses when performing health checks on targets - `HealthCheckProtocol: HTTP`
 - The time it takes to determine a non-responsive target is unhealthy - `HealthCheckIntervalSeconds: 10`
 - The number of healthy/unhealthy checks required to change the health status - `HealthyThresholdCount: 2` `UnhealthyThresholdCount: 5`
+
+#### Summary
+
+As this lesson comes to an end, now you should be able to...
+
+Specify firewall rules using security groups
+Create autoscaling groups for the elasticity of servers
+Code the launch configuration for the web application
+Add the target groups and listeners
+Update the stack with the load balancer
+Learn to debug the security group
+
+#### Lesson 5: Storage and Databases
+
+S3 Key Points
+
+- S3 can be used to store your config files, media or log files.
+- Your servers don't need credentials to access S3 provided they have a role assigned.
+- We recommend you choose RDS as opposed to installing a database in your own servers that you have to manage and back up yourself.
+
+Recommended best practices for S3 Storage
+
+- Remember to keep S3 as private as possible, never “Open to the world”
+- if you need to share files publicly, use expiring pre-signed URLs as recommended
+- if your web application captures incoming files, such as PDFs or Photos, capture those to local, temporary storage first, --which is really fas -- and then move the data to S3
+- Finally, when creating IAM Roles, be sure to limit access to a specific bucket and not all of them!.
+
+Summary
+
+As this last lesson comes to an end, now you must be able to employ the following storage options:
+
+- Relation Database Storage (RDS) service
+- Object storage service - Simple Storage Service (S3)
