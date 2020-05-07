@@ -997,3 +997,576 @@ As this lesson comes to an end, now you should be able to ...
   - Internet gateway and NAT gateway
   - Route table
 - Export the stack output
+
+#### Lesson 4: Servers and Security Groups
+
+#### 3. Understanding Security Groups
+
+##### AWS::EC2::SecurityGroup
+
+Security Groups
+
+- Security groups are specific to individual resources (EC2 servers, databases) and not to subnets.
+
+Traffic is blocked by default
+
+- In cloud, traffic is completely blocked, so you have to explicitly open ports to allow traffic in and out. This is a general networking concept.
+
+Limit inbound traffic for security
+
+- For ingress rules, we want to limit inbound traffic, for security, to a single port or just a handful of ports required by the application we are running.
+- If it’s a public web server, for example, it will require `port 80` open to the world (World = `0.0.0.0/0`)
+- Should you need the SSH port open, restrict this port only to your specific IP address.
+
+For outbound traffic, give full access
+For egress rules, we want to give the resource full access to the internet, so we give egress access to all ports, from `0` all the way to `65535`.
+
+[AWS::EC2::SecurityGroup](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group.html)
+
+Specifies a security group. To create a security group, use the VpcId property to specify the VPC for which to create the security group.
+
+Syntax
+
+```yaml
+Type: AWS::EC2::SecurityGroup
+Properties:
+  GroupDescription: String # A description for the security group. This is informational only.
+  GroupName: String # The name of the security group.
+  SecurityGroupEgress: # [VPC only] The outbound rules associated with the security group.
+    - Egress
+  SecurityGroupIngress: # The inbound rules associated with the security group.
+    - Ingress
+  Tags:
+    - Tag
+  VpcId: String # [VPC only] The ID of the VPC for the security group.
+```
+
+Return Values
+**Ref**
+When you pass the logical ID of this resource to the intrinsic Ref function, Ref returns the resource ID. For security groups that were created without specifying a VPC (EC2-Classic or a default VPC), Ref returns the resource name.
+
+**Fn::GetAtt**
+The `Fn::GetAtt` intrinsic function returns a value for a specified attribute of this type. The following are the available attributes and sample return values.
+
+For more information about using the Fn::GetAtt intrinsic function, see Fn::GetAtt.
+
+GroupId
+The group ID of the specified security group, such as sg-94b3a1f6.
+
+VpcId
+The physical ID of the VPC. You can obtain the physical ID by using a reference to an AWS::EC2::VPC, such as: { "Ref" : "myVPC" }.
+
+Examples
+
+```yaml
+InstanceSecurityGroup:
+  Type: AWS::EC2::SecurityGroup
+  Properties:
+    GroupDescription: Allow http to client host
+    VpcId:
+      Ref: myVPC
+    SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+    SecurityGroupEgress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+```
+
+Ingress rules and egress rules
+
+- Ingress rules are for inbound traffic, and egress rules are for outbound traffic.
+- Ingress rules restrict or allow traffic trying to reach our resources on specific ports.
+- Egress rules restrict or allow traffic originating from our server -- typically we are ok allowing all outbound traffic without restrictions as this doesn’t pose a risk for a security breach.
+
+##### AWS::EC2::SecurityGroup Ingress
+
+[AWS::EC2::SecurityGroup Ingress](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group-rule-1.html)
+
+Specifies an inbound rule for a security group. An inbound rule permits instances to receive traffic from the specified IPv4 or IPv6 CIDR address range, or from the instances associated with the specified security group.
+
+Syntax
+
+```yaml
+CidrIp: String # The IPv4 address range, in CIDR format.
+CidrIpv6: String
+Description: String # A description for the security group rule.
+FromPort: Integer # The start of port range for the TCP and UDP protocols
+IpProtocol: String # The IP protocol name (tcp, udp, icmp, icmpv6) or number
+SourcePrefixListId: String
+SourceSecurityGroupId: String # The ID of the security group. You must specify either the security group ID or the security group name in the request.
+SourceSecurityGroupName: String
+SourceSecurityGroupOwnerId: String
+ToPort: Integer # The end of port range for the TCP and UDP protocols
+```
+
+**Step 07: Create Security Groups**
+
+```yaml
+Parameters:
+  EnvironmentName:
+    Description: An environment name that will prefixed to resources
+    Type: String
+
+Resources:
+  LBSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to our load balancer
+      VpcId:
+        Fn::ImportValue: !Sub "${EnvironmentName}-VPCID"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+  WebServerSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to our hosts and SSH
+      VpcId:
+        Fn::ImportValue: !Sub "${EnvironmentName}-VPCID"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080 # start from port 8080
+          ToPort: 8080 # end at port 8080
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22 # start from port 22
+          ToPort: 22 # end at port 22
+          CidrIp: 0.0.0.0/0
+```
+
+`Fn::ImportValue` function will import `Outputs` from other stack(s).
+In this case, it will try to import an outputs called `UdacityProject-VPCID`, which is an Outputs from `network` stack
+
+Note: After setup, remember to close port `22`
+
+To create this stack, run
+
+```
+./create-stack.sh udacity-project-servers-stack servers.yml servers-params.json
+```
+
+And verify 2 security groups are created inside our VPC\
+![Security Groups](./docs/images/step-07-01.png)
+
+![Security Groups](./docs/images/step-07-02.png)
+
+#### 5. Creating Autoscaling Group
+
+An `Autoscaling Group` is easy to setup. However it needs to know what to launch, for example what to install for the newly created instance. Hence we need to prepare a UserData script for it.
+
+##### What is an AWS UserData script?
+
+A UserData script is a series of commands that you use to properly configure your server to run your application.
+
+This is where you do things such as:
+
+- Fetch credentials
+- Set Environment Variables ( ENV=PROD, for example )
+- Download and Install libraries
+- Get your source files or binaries from a storage location, such as S3
+
+When should you use it?
+If you want to run your application in a plain out-of-the-box Linux or Window server, you'll use the UserData script to do all the necessary configurations. You don't need it if you are using a Virtual Machine Image ( AMI ) that already has everything installed.
+
+##### Verification and troubleshooting
+
+The best way to create and verify a UserData script is to run each command manually and verify everything works as expected. If you run yours and it fails, you should login to the server and check the logs that can be found here: `/var/log/cloud-init-output.log`. For Windows: `C:\ProgramData\Amazon\EC2-Windows\Launch\Log\UserdataExecution.log`
+
+Difference between UserData on Windows and Linux
+On Windows, you have the option of PowerShell:
+
+```powershell
+<powershell>
+$file = $env:SystemRoot + "\Temp\" + (Get-Date).ToString("MM-dd-yy-hh-mm")
+New-Item $file -ItemType file
+</powershell>
+```
+
+Or more traditional Batch scripts:
+
+```bash
+<script>
+echo Current date and time >> %SystemRoot%\Temp\test.log
+echo %DATE% %TIME% >> %SystemRoot%\Temp\test.log
+</script>
+```
+
+For Linux, follow the included example.
+
+##### Auto Scaling Concepts
+
+1. Scaling Policy
+
+A Scaling Policy is the **criteria used to decide when to Add or Remove Servers from your Auto Scaling Group**. Running the servers 24 hours a day costs money. So, It's best to have criteria to choose to turn those servers off when they are not needed and then turn them back on when there is demand.
+
+This is achieved using a Scaling Policy. For example, you could create a CloudWatch Alarm with a custom metric that counts the number of web visitors in the last 2 hours, if the number is less than 100, for example, perhaps a single server is enough. This will be a trigger to Scale Down if there is more than one server running at the time.
+
+2. Launch Configuration
+
+**Think of a Launch Configuration as a template or a recipe. You are instructing the Auto Scaling service HOW to run your web application**. For example: My application requires 2GB RAM , 4 vCPUs, 10GB of Disk Space, The Java runtime version 8 Or NodeJS 10.0, for example. All this on top of a standard distribution of Linux or Windows Read more about Launch Configuration.
+
+Once an Auto Scaling group knows how to launch new copies of your application, then the process of scaling up and down can take place.
+
+3. Load Balancer
+
+While a load balancer is not exactly a part of Auto Scaling but it helps answer the question: "If I am running a web application in 20 different servers, how do I setup a **single point of entry** that guarantees an even workload distribution across all 20 servers?" The answer is: with a Load Balancer.
+
+A load balancer allows you to reduce your Auto Scaling down to 1 server at night, when very few people are using your Web Application and then Scale up to 10 or more servers during the day, when hundreds or thousands may be using it. The user doesn't experience any difference in availing the services due to auto-scaling.
+
+##### Step 08. Create launch configuration
+
+##### AWS::AutoScaling::LaunchConfiguration
+
+[AWS::AutoScaling::LaunchConfiguration](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-as-launchconfig.html)
+
+The LaunchConfiguration resource specifies the Amazon EC2 Auto Scaling launch configuration that can be used by an Auto Scaling group to configure Amazon EC2 instances.
+
+Syntax
+
+```yaml
+Type: AWS::AutoScaling::LaunchConfiguration
+Properties:
+  AssociatePublicIpAddress: Boolean # For Auto Scaling groups that are running in a virtual private cloud (VPC), specifies whether to assign a public IP address to the group's instances. If you specify true, each instance in the Auto Scaling group receives a unique public IP address
+  # If an instance receives a public IP address and is also in a VPC that is defined in the same stack template, you must use the DependsOn attribute to declare a dependency on the VPC-gateway attachment.
+  BlockDeviceMappings: # Specifies how block devices are exposed to the instance. You can specify virtual devices and EBS volumes.
+    - BlockDeviceMapping
+  ClassicLinkVPCId: String
+  ClassicLinkVPCSecurityGroups:
+    - String
+  EbsOptimized: Boolean
+  IamInstanceProfile: String
+  ImageId: String # Required. Provides the unique ID of the Amazon Machine Image (AMI) that was assigned during registration. For more information, see Finding an AMI in the Amazon EC2 User Guide for Linux Instances.
+  InstanceId: String # The ID of the Amazon EC2 instance you want to use to create the launch configuration. Use this property if you want the launch configuration to use settings from an existing Amazon EC2 instance.
+  InstanceMonitoring: Boolean
+  InstanceType: String
+  KernelId: String
+  KeyName: String # Provides the name of the EC2 key pair.
+  LaunchConfigurationName: String
+  PlacementTenancy: String
+  RamDiskId: String
+  SecurityGroups:
+    - String
+  SpotPrice: String
+  UserData: String
+```
+
+In our example:
+
+```yaml
+WebAppLaunchConfig:
+  Type: AWS::AutoScaling::LaunchConfiguration
+  Properties:
+    UserData:
+      Fn::Base64: !Sub |
+        #!/bin/bash
+        # Install docker
+        apt-get update
+        apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+        add-apt-repository \
+        "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+        $(lsb_release -cs) \
+        stable"
+        apt-get update
+        apt-get install -y docker-ce
+        usermod -aG docker ubuntu # to avoid using sudo, add your user to the 'docker' group, in this case I was logged in under the default 'ubuntu' user account
+        docker run -p 8080:8080 tomcat:8.0 # run tomcat v8.0, and map container port 8080 to server 8080
+    ImageId: ami-003634241a8fcdec0
+    KeyName: udacity-project-ssh # optional for SSH. If you don't need SSH to this machine, delete this
+    SecurityGroups:
+      - Ref: WebServerSecGroup # open port 80
+    InstanceType: t2.micro
+    BlockDeviceMappings:
+      - DeviceName: "/dev/sdk"
+        Ebs:
+          VolumeSize: "10"
+```
+
+Note: `KeyName` is optional for SSH. You must create this key for CloudFormation refers to this key. If you don't need SSH to this machine, delete this
+
+Now go to "EC2->AUTO SCALING->Launch Configurations" section to verify it is created
+
+![Launch Configurations](./docs/images/step-08-01.png)
+
+WebAppGroup in our template
+
+- An Auto Scaling Group is in charge of providing servers for your application based on an Alarm/Criteria, such as number of concurrent users, CPU Usage or HTTP Requests
+- Since The Auto Scaling Group is not specific to your application, you need to provide a Launch Configuration which says which machine image to use and how much memory and disk space your application will need, among other things.
+- You can specify a Minimum and Maximum count of servers to use for Auto Scaling -- This is a great feature of cloud that can save you lots of money in unused infrastructure and it’s a key example of the elasticity of the cloud.
+
+##### AWS::AutoScaling::AutoScalingGroup
+
+[AWS::AutoScaling::AutoScalingGroup](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-as-group.html)
+
+Defines an Amazon EC2 Auto Scaling group with the specified name and attributes.
+
+Syntax
+
+```yaml
+Type: AWS::AutoScaling::AutoScalingGroup
+Properties:
+  AutoScalingGroupName: String # The name of the Auto Scaling group. This name must be unique per Region per account.
+  AvailabilityZones: # A list of Availability Zones for the group. You must specify one of the following properties: VPCZoneIdentifier or AvailabilityZones.
+    - String
+  Cooldown: String
+  DesiredCapacity: String
+  HealthCheckGracePeriod: Integer
+  HealthCheckType: String
+  InstanceId: String
+  LaunchConfigurationName: String
+  LaunchTemplate: LaunchTemplateSpecification
+  LifecycleHookSpecificationList:
+    - LifecycleHookSpecification
+  LoadBalancerNames:
+    - String
+  MaxInstanceLifetime: Integer
+  MaxSize: String
+  MetricsCollection:
+    - MetricsCollection
+  MinSize: String
+  MixedInstancesPolicy: MixedInstancesPolicy
+  NotificationConfigurations:
+    - NotificationConfiguration
+  PlacementGroup: String
+  ServiceLinkedRoleARN: String
+  Tags:
+    - TagProperty
+  TargetGroupARNs:
+    - String
+  TerminationPolicies:
+    - String
+  VPCZoneIdentifier: # A list of subnet IDs for a virtual private cloud (VPC). If you specify VPCZoneIdentifier with AvailabilityZones, the subnets that you specify for this property must reside in those Availability Zones.
+    - String
+```
+
+In our example:
+
+```yaml
+WebAppGroup:
+  Type: AWS::AutoScaling::AutoScalingGroup
+  Properties:
+    VPCZoneIdentifier:
+      - Fn::ImportValue: !Sub "${EnvironmentName}-PRIV-NETS"
+    LaunchConfigurationName:
+      Ref: WebAppLaunchConfig
+    MinSize: "2"
+    MaxSize: "3"
+    TargetGroupARNs: # A list of Amazon Resource Names (ARN) of target groups to associate with the Auto Scaling group. Instances are registered as targets in a target group, and traffic is routed to the target group.
+      - Ref: WebAppTargetGroup
+```
+
+Note: Here we can see TargetGroupARNs. Which will point to target groups of Application Load Balancer
+
+Relationship between Target Groups and Auto Scaling groups.
+
+**A Load Balancer is a device that simply forwards traffic, evenly across a group of servers, known as a Target Group**.
+
+The problem is, we can’t specifically name those servers, because if they are part of an Auto Scaling group, this means that they can come and go as demand for your application increases or decreases.
+
+The way around this is, using the `TargetGroupARNs` property of the Auto Scaling group, we can automatically associate any new servers and remove discarded servers from the Target group automatically by simply including the Resource Name (ARN) of our Load Balancer’s target group in this property of our Auto Scaling Group. This way, the Load Balancer will always know where to send the traffic.
+
+##### AWS::ElasticLoadBalancingV2::LoadBalancer
+
+[AWS::ElasticLoadBalancingV2::LoadBalancer](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticloadbalancingv2-loadbalancer.html)
+
+Specifies an Application Load Balancer or a Network Load Balancer.
+
+Syntax
+
+```yaml
+Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+Properties:
+  IpAddressType: String
+  LoadBalancerAttributes:
+    - LoadBalancerAttribute
+  Name: String
+  Scheme: String
+  SecurityGroups:
+    - String
+  SubnetMappings: # The IDs of the public subnets. You can specify only one subnet per Availability Zone. You must specify either subnets or subnet mappings.
+    - SubnetMapping
+  Subnets: # The IDs of the subnets. You can specify only one subnet per Availability Zone. You must specify either subnets or subnet mappings.
+    - String
+  Tags:
+    - Tag
+  Type: String
+```
+
+Return Values
+**Ref**
+When you pass the logical ID of this resource to the intrinsic Ref function, Ref returns the Amazon Resource Name (ARN) of the load balancer.
+
+For more information about using the Ref function, see Ref.
+
+**Fn::GetAtt**
+The Fn::GetAtt intrinsic function returns a value for a specified attribute of this type. The following are the available attributes and sample return values.
+
+For more information about using the Fn::GetAtt intrinsic function, see Fn::GetAtt.
+
+CanonicalHostedZoneID
+The ID of the Amazon Route 53 hosted zone associated with the load balancer. For example, Z2P70J7EXAMPLE.
+
+DNSName
+The DNS name for the load balancer. For example, my-load-balancer-424835706.us-west-2.elb.amazonaws.com.
+
+LoadBalancerFullName
+The full name of the load balancer. For example, app/my-load-balancer/50dc6c495c0c9188.
+
+LoadBalancerName
+The name of the load balancer. For example, my-load-balancer.
+
+SecurityGroups
+The IDs of the security groups for the load balancer.
+
+##### AWS::ElasticLoadBalancingV2::Listener
+
+[AWS::ElasticLoadBalancingV2::Listener](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticloadbalancingv2-listener.html)
+
+Specifies a listener for an Application Load Balancer or Network Load Balancer.
+
+Syntax
+
+```yaml
+Type: AWS::ElasticLoadBalancingV2::Listener
+Properties:
+  Certificates: # The default SSL server certificate for a secure listener. You must provide exactly one certificate if the listener protocol is HTTPS or TLS.
+    - Certificate
+  DefaultActions: # The actions for the default rule. You cannot define a condition for a default rule.
+    - Action
+  LoadBalancerArn: String
+  Port: Integer # Required. The port on which the load balancer is listening.
+  Protocol: String # Required. The protocol for connections from clients to the load balancer. For Application Load Balancers, the supported protocols are HTTP and HTTPS. For Network Load Balancers, the supported protocols are TCP, TLS, UDP, and TCP_UDP.
+  SslPolicy: String
+```
+
+Return Values
+**Ref**
+When you pass the logical ID of this resource to the intrinsic Ref function, Ref returns the Amazon Resource Name (ARN) of the listener.
+
+##### AWS::ElasticLoadBalancingV2::ListenerRule
+
+[AWS::ElasticLoadBalancingV2::ListenerRule](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticloadbalancingv2-listenerrule.html)
+
+Specifies a listener rule. The listener must be associated with an Application Load Balancer. Each rule consists of a priority, one or more actions, and one or more conditions.
+
+Syntax
+
+```yaml
+Type: AWS::ElasticLoadBalancingV2::ListenerRule
+Properties:
+  Actions: # Required. The actions. must include exactly one of the following types of actions: forward, fixed-response, or redirect, and it must be the last action to be performed. If the rule is for an HTTPS listener, it can also optionally include an authentication action.
+    - Action
+  Conditions: # Required. The rule can optionally include up to one of each of the following conditions: http-request-method, host-header, path-pattern, and source-ip. A rule can also optionally include one or more of each of the following conditions: http-header and query-string.
+    - RuleCondition
+  ListenerArn: String # Required. The Amazon Resource Name (ARN) of the listener.
+  Priority: Integer # Required. The rule priority. A listener can't have multiple rules with the same priority.
+```
+
+Return Values
+**Ref**
+When you pass the logical ID of this resource to the intrinsic Ref function, Ref returns the Amazon Resource Name (ARN) of the listener rule.
+
+The following is the required syntax for `Load Balancer` and `Listener`
+
+```yaml
+ WebAppLB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Subnets:
+      - Fn::ImportValue: !Sub "${EnvironmentName}-PUB1-SN"
+      - Fn::ImportValue: !Sub "${EnvironmentName}-PUB2-SN"
+      SecurityGroups:
+      - Ref: LBSecGroup
+
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+      - Type: forward
+        TargetGroupArn:
+          Ref: WebAppTargetGroup
+      LoadBalancerArn:
+        Ref: WebAppLB
+      Port: '80'
+      Protocol: HTTP
+
+  ALBListenerRule:
+      Type: AWS::ElasticLoadBalancingV2::ListenerRule
+      Properties:
+        Actions:
+        - Type: forward
+          TargetGroupArn: !Ref 'WebAppTargetGroup'
+        Conditions:
+        - Field: path-pattern
+          Values: [/]
+        ListenerArn: !Ref 'Listener'
+        Priority: 1
+```
+
+Health Checks are the requests your Application Load Balancer sends to its registered targets. These periodic requests test the status of these targets.
+
+##### AWS::ElasticLoadBalancingV2::TargetGroup
+
+[AWS::ElasticLoadBalancingV2::TargetGroup](AWS::ElasticLoadBalancingV2::TargetGroup)
+
+Specifies a target group for an Application Load Balancer or Network Load Balancer.
+
+Syntax
+
+```yaml
+Type: AWS::ElasticLoadBalancingV2::TargetGroup
+Properties:
+  HealthCheckEnabled: Boolean
+  HealthCheckIntervalSeconds: Integer # The approximate amount of time, in seconds, between health checks of an individual target. For HTTP and HTTPS health checks, the range is 5–300 seconds. For TCP health checks, the supported values are 10 and 30 seconds.
+  HealthCheckPath: String # [HTTP/HTTPS health checks] The ping path that is the destination on the targets for health checks. The default is /.
+  HealthCheckPort: String
+  HealthCheckProtocol: String
+  HealthCheckTimeoutSeconds: Integer # The amount of time, in seconds, during which no response from a target means a failed health check. For target groups with a protocol of HTTP or HTTPS, the default is 5 seconds. For target groups with a protocol of TCP or TLS, this value must be 6 seconds for HTTP health checks and 10 seconds for TCP and HTTPS health checks. If the target type is lambda, the default is 30 seconds.
+  HealthyThresholdCount: Integer # The number of consecutive health checks successes required before considering an unhealthy target healthy. For target groups with a protocol of HTTP or HTTPS, the default is 5. For target groups with a protocol of TCP or TLS, the default is 3. If the target type is lambda, the default is 5.
+  Matcher: Matcher
+  Name: String
+  Port: Integer # The port on which the targets receive traffic. This port is used unless you specify a port override when registering the target. If the target is a Lambda function, this parameter does not apply.
+  Protocol: String
+  Tags:
+    - Tag
+  TargetGroupAttributes:
+    - TargetGroupAttribute
+  Targets:
+    - TargetDescription
+  TargetType: String
+  UnhealthyThresholdCount: Integer # The number of consecutive health check failures required before considering a target unhealthy. For target groups with a protocol of HTTP or HTTPS, the default is 2. For target groups with a protocol of TCP or TLS, this value must be the same as the healthy threshold count. If the target type is lambda, the default is 2.
+  VpcId: String # The identifier of the virtual private cloud (VPC). If the target is a Lambda function, this parameter does not apply. Otherwise, this parameter is required.
+```
+
+You can see us defining our Health Check properties in the example below:
+
+```yaml
+WebAppTargetGroup:
+  Type: AWS::ElasticLoadBalancingV2::TargetGroup
+  Properties:
+    HealthCheckIntervalSeconds: 10
+    HealthCheckPath: /
+    HealthCheckProtocol: HTTP
+    HealthCheckTimeoutSeconds: 8
+    HealthyThresholdCount: 2
+    Port: 8080
+    Protocol: HTTP
+    UnhealthyThresholdCount: 5
+    VpcId:
+      Fn::ImportValue:
+        Fn::Sub: "${EnvironmentName}-VPCID"
+```
+
+In the above example we specify the following:
+
+- The port where our targets receive traffic - `Port: 8080`
+- The protocol the load balancer uses when performing health checks on targets - `HealthCheckProtocol: HTTP`
+- The time it takes to determine a non-responsive target is unhealthy - `HealthCheckIntervalSeconds: 10`
+- The number of healthy/unhealthy checks required to change the health status - `HealthyThresholdCount: 2` `UnhealthyThresholdCount: 5`
