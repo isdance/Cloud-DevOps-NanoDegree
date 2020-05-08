@@ -120,3 +120,198 @@ sudo systemctl start jenkins
 sudo systemctl enable jenkins
 sudo systemctl status jenkins
 ```
+
+Or you can use Jenkins docker image
+
+```sh
+docker run --name jenkins -p 8080:8080 -p 50000:50000 -v jenkins_home:/var/jenkins_home --detach jenkins/jenkins:lts
+```
+
+this will automatically create a 'jenkins_home' docker volume on the host machine, that will survive the container stop/restart/deletion.
+
+Note:
+If you need to install any packages on the `jenkins/jenkins:lts` image, better you create your custom image base on that
+
+```dockerfile
+FROM jenkins
+USER root
+CMD apt-get install xxxx
+USER jenkins
+```
+
+But **for simplicity**, you can sh into the running jenkins container as root user:
+
+```bash
+docker exec -u 0 -it jenkins bash
+```
+
+Then as a root user, you can apt install basically everything you need. for example: `tidy` for html lint
+
+```bash
+apt install tidy -y
+```
+
+install docker
+
+```bash
+curl -sSL https://get.docker.com/ | sh
+```
+
+install npm via nvm
+
+```bash
+curl -sL https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh -o install_nvm.sh
+```
+
+then
+
+```bash
+bash install_nvm.sh
+
+source ~/.profile
+
+nvm ls-remote # check available versions
+
+nvm install 10.20.1
+nvm use 10.20.1
+```
+
+Logging into Jenkins using GUI
+
+- Go to AWS dashboard to copy the public IP address of your Ubuntu EC2 instance.
+
+- Paste the public IP address into your browser, appended with :8080 port. For the first time, it will open up the Jenkins GUI as shown in the snapshot below:
+
+![jenkins installation](./docs/images/jenkins-install-01.png)
+
+- On the terminal, where you have connected to the Ubuntu EC2 instance, view the content of the file using the command sudo cat <path copied in the previous step>. It will show the default administrator password. You can copy and use this password in the GUI (browser) to log in first time.
+
+- After successful login, you may choose to install default plugins. Though, we will learn to use specific plugins for our needs in the next lesson. See the snapshot below.
+
+![jenkins installation](./docs/images/jenkins-install-02.png)
+
+- If you choose to install suggested plugins, the following plugins would get installed. See the snapshot below:
+
+![jenkins installation](./docs/images/jenkins-install-03.png)
+
+- Set up the user credentials. See the snapshot below:
+
+![jenkins installation](./docs/images/jenkins-install-04.png)
+
+- Next, it will show you a success message and take you to the Jenkins dashboard.
+
+![jenkins installation](./docs/images/jenkins-install-05.png)
+
+#### 11. Install Blue Ocean Plugin into Jenkins
+
+Jenkins Plugins
+Jenkins supports a plenitude of plugins. Plugins extend Jenkins with additional features to support various requirements. Here we will install the Blue Ocean Plugin into Jenkins. The general sequence of steps to select and install any plugin into Jenkins are:
+
+Jenkins dashboard --> Manage Jenkins --> Manage Plugins --> Available tab --> Filter out using a keyword
+
+Blue Ocean Plugin
+[Blue Ocean](https://jenkins.io/doc/book/blueocean/) essentially provides a re-skinned and simplified GUI for working with Jenkins. Blue Ocean can help you configure your pipeline using a few clicks.
+
+Configure Jenkins for Enterprise Authentication with LDAP
+
+- In the Jenkins GUI click on “Manage Jenkins”
+- Click the lock icon “Configure Global Security”
+- Select the checkbox “Enable Security”
+- Use the radio button option for LDAP
+- Enter the Hostname/IP address of the LDAP server
+- Select “Advanced Server Configuration”
+- Configure the LDAP authentication to match your environment
+- Once configured, use the “Test LDAP Setting” and put in your username and password
+- If successful, it will present a login success message
+- Click Apply and Save button
+
+Active Directory Authentication
+
+- Select “Manage Jenkins” in home screen
+- Click “Manage Plugins”
+- Select the “Available” tab
+- Enter “Active Directory” in the search box
+- Select the “Active Directory Plugin” and click “Download now and install after restart”
+- Restart your Jenkins server when it is idle
+- Once installed, in “Manage Jenkins” select “Configure Global Security”
+- Select “Active Directory” and enter the domain and domain accounts
+- Choose “Matrix based Security” and configure the desired users and groups (note: they are case sensitive)
+- Login to the web interface with Active Directory credentials to test the functionality
+
+#### Lesson 2: Jenkins pipeline and deployment strategy
+
+In the previous lesson, we learned about the fundamentals of CI/CD and set up the Jenkins environment to automate the building, testing, and delivering an application. Also, we read earlier that plugins extend Jenkins with additional features to support various requirements. In the current lesson, we will learn to use a few more plugins into Jenkins and discuss deployment strategies.
+
+**Lesson Objectives**
+After completing this lesson, you will be able to:
+
+- Install and utilize AWS Plugin into Jenkins
+- Demonstrate the usage of Blue Ocean Plugin
+- Setup a Jenkins Pipeline and add a repository to the Pipeline
+- Explain the concept of multiple pipelines for different environments
+- Explain Pipeline triggers
+- Discuss different types of Pipeline testing
+- Install Aqua MicroScanner Plugin into Jenkins for testing Pipeline security
+- Introduce the Ansible as a tool for provisioning the target infrastructure using code (infrastructure as code)
+- Discuss deployment strategies and best practices - specifically Blue-Green deployment.
+
+Steps to Create a Pipeline in Blue Ocean
+As we have installed AWS and Blue Ocean plugins into Jenkins on our Ubuntu EC2 instance, next, we will follow the steps below to create a Pipeline in Blue Ocean.
+
+1. Fork/Clone the course's Github repository. We will add one Github repository per project. A single Github repository can be re-used in multiple Pipelines.
+2. Create your Pipeline project in Blue Ocean.
+3. Create your initial Pipeline
+4. Use Jenkins to add multiple stages (environments) using Jenkinsfile. Generally, a Pipeline should have three stages (environments) defined in a Jenkinsfile: Development (build), Staging (test), and Deployment. See a declarative Pipeline example here.
+5. Create multiple pipelines, each for Development (build), Staging (test), and Deployment, by creating branches in your Git repository.
+
+Create pipeline in blue ocean is easy:
+
+Step 1: Create your first pipeline:
+
+![blue-ocean-step1](./docs/images/blue-ocean-step1.png)
+
+Step 2: Connect to a source control
+
+![blue-ocean-step2](./docs/images/blue-ocean-step2.png)
+
+Step 3: Generate and copy the github token
+
+![blue-ocean-step3](./docs/images/blue-ocean-step3a.png)
+
+![blue-ocean-step3](./docs/images/blue-ocean-step3b.png)
+
+Step 4: Select a Github project which contains a `Jenkinsfile` file
+
+![blue-ocean-step4](./docs/images/blue-ocean-step4.png)
+
+A very basic Jenkinsfile: (Note `tidy` is the package we installed using `sudo apt install tidy`. if you use jenkins docker image, you need to create your custom docker image based on jenkins image, or bash into the running jenkins container as root user, and install `tidy` )
+
+```Jenkinsfile
+pipeline {
+     agent any
+     stages {
+         stage('Build') {
+             steps {
+                 sh 'echo "Hello World"'
+                 sh '''
+                     echo "Multiline shell steps works too"
+                     ls -lah
+                 '''
+             }
+         }
+         stage('Lint HTML') {
+              steps {
+                  sh 'tidy -q -e *.html'
+              }
+         }
+     }
+}
+```
+
+Step 5: Now a pipeline has been setup
+
+![blue-ocean-step5](./docs/images/blue-ocean-step5a.png)
+
+![blue-ocean-step5](./docs/images/blue-ocean-step5b.png)
+
+![blue-ocean-step5](./docs/images/blue-ocean-step5c.png)
