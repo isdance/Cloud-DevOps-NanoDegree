@@ -102,7 +102,7 @@ sudo apt install -y default-jdk
 # Step 3 - Download Jenkins package.
 # You can go to http://pkg.jenkins.io/debian/ to see the available commands
 # First, add a key to your system
-wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | sudo apt-key add -
+wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
 
 # # Step 4 - Add the following entry in your /etc/apt/sources.list:
 sudo sh -c 'echo deb https://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
@@ -118,7 +118,44 @@ sudo systemctl start jenkins
 
 # Step 8 - Enable the service to load during boot
 sudo systemctl enable jenkins
-sudo systemctl status jenkins
+```
+
+To start, stop or restart jenkins
+
+```bash
+$ sudo systemctl start jenkins.service
+$ sudo systemctl stop jenkins.service
+$ sudo systemctl restart jenkins.service
+```
+
+You also need node.js and docker
+
+Node.js v12.x: [Node.js Binary Distributions](https://github.com/nodesource/distributions)
+
+```
+# Using Ubuntu
+curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+
+Install docker
+
+```
+sudo apt install docker.io
+
+sudo systemctl start docker
+
+sudo systemctl start docker
+
+sudo systemctl enable docker
+
+sudo usermod -aG docker $USER
+
+# add jenkins to docker group
+sudo usermod -aG docker jenkins
+
+# you MUST restart jenkins service
+sudo systemctl restart jenkins.service
 ```
 
 Or you can use Jenkins docker image
@@ -264,6 +301,11 @@ As we have installed AWS and Blue Ocean plugins into Jenkins on our Ubuntu EC2 i
 4. Use Jenkins to add multiple stages (environments) using Jenkinsfile. Generally, a Pipeline should have three stages (environments) defined in a Jenkinsfile: Development (build), Staging (test), and Deployment. See a declarative Pipeline example here.
 5. Create multiple pipelines, each for Development (build), Staging (test), and Deployment, by creating branches in your Git repository.
 
+Install blue ocean
+![blue-ocean-step1](./docs/images/blue-ocean-step0.png)
+
+This will install a list of required plugins for you.
+
 Create pipeline in blue ocean is easy:
 
 Step 1: Create your first pipeline:
@@ -315,3 +357,125 @@ Step 5: Now a pipeline has been setup
 ![blue-ocean-step5](./docs/images/blue-ocean-step5b.png)
 
 ![blue-ocean-step5](./docs/images/blue-ocean-step5c.png)
+
+#### install plugin for AWS (Pipeline: AWS Steps)
+
+![aws-plugin-step06](./docs/images/aws-plugin-step-06a.png)
+
+Now go and add your aws IAM role to Jenkins
+![aws-plugin-step06](./docs/images/aws-plugin-step-06b.png)
+
+And can you can push your artifacts to s3
+
+```Jenkins
+pipeline {
+     agent any
+     stages {
+         stage('Lint HTML') {
+              steps {
+                  sh 'tidy -q -e *.html'
+              }
+         }
+         stage('Upload to AWS') {
+            steps {
+                withAWS(region:'us-west-2', credentials:'aws-static') {
+                    s3Upload(pathStyleAccessEnabled:true, payloadSigningEnabled: true, file:'index.html', bucket:'react-app-hosting-bucket')
+                }
+            }
+        }
+     }
+}
+```
+
+If you install `node.js`, docker on your ec2 instance, you can deploy JavaScript project to S3.
+
+**BUT PLEASE USE A BIGGER MACHINE, `t2.medium` worked for me.**
+
+```jenkins
+pipeline {
+     agent any
+     environment {
+        CI = 'true'
+    }
+     stages {
+         stage('Build') {
+             steps {
+                 sh 'echo "Build Start"'
+                 sh 'npm install --loglevel verbose'
+                 sh 'npm run build'
+             }
+         }
+         stage('Lint') {
+              steps {
+                  sh 'npm run lint'
+              }
+         }
+         stage('Test') {
+              steps {
+                  sh 'npm test'
+              }
+         }
+         stage('Upload to AWS') {
+            steps {
+                withAWS(region:'us-west-2', credentials:'aws-static') {
+                    s3Upload(pathStyleAccessEnabled:true, payloadSigningEnabled: true, workingDir:'build', includePathPattern:'**/*', bucket:'react-app-hosting-bucket')
+                }
+            }
+        }
+     }
+}
+```
+
+**The `environment { CI = 'true' }` is telling Jenkins, when running `npm test`, DO NOT ENTER `Watch` MDOE!!**
+
+By default npm test runs the watcher with interactive CLI. However, you can force it to run tests once and finish the process by setting an environment variable called CI.
+
+Details can be found [here](https://create-react-app.dev/docs/running-tests/#continuous-integration)
+
+Or you can use docker in the project
+
+```
+pipeline {
+     agent {
+        docker { image 'node:12.16.3-alpine3.11' }
+     }
+     environment {
+        CI = 'true'
+        HOME = '.'
+    }
+     stages {
+         stage('Build') {
+             steps {
+                 sh 'echo "Build Start"'
+                 sh 'npm install --loglevel verbose'
+                 sh 'npm run build'
+             }
+         }
+         stage('Lint') {
+              steps {
+                  sh 'npm run lint'
+              }
+         }
+         stage('Test') {
+              steps {
+                  sh 'npm test'
+              }
+         }
+         stage('Upload to AWS') {
+            steps {
+                withAWS(region:'us-west-2', credentials:'aws-static') {
+                    s3Upload(pathStyleAccessEnabled:true, payloadSigningEnabled: true, workingDir:'build', includePathPattern:'**/*', bucket:'react-app-hosting-bucket')
+                }
+            }
+        }
+     }
+}
+```
+
+**The `environment { HOME = '.' }` enables the docker container to run as root user, otherwise the `npm instal` will fail because of permission denied!!!**. [stackoverflow answer](https://stackoverflow.com/questions/42743201/npm-install-fails-in-jenkins-pipeline-in-docker)
+
+Also when you upload a folder but not a file to S3. use `s3Upload(pathStyleAccessEnabled:true, payloadSigningEnabled: true, workingDir:'<your-production-build-folder>', includePathPattern:'**/*', bucket: <your-bucket-name-for-deployment>)`.
+
+Full details of pipeline-aws is [here](https://www.jenkins.io/doc/pipeline/steps/pipeline-aws/), for example [upload files/folders to S3](https://www.jenkins.io/doc/pipeline/steps/pipeline-aws/#s3upload-copy-file-to-s3)
+
+More details about using docker in Jenkins pipeline: [Using Docker with Pipeline](https://www.jenkins.io/doc/book/pipeline/docker/)
