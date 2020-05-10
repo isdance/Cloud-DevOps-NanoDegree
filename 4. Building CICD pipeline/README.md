@@ -365,6 +365,8 @@ Step 5: Now a pipeline has been setup
 Now go and add your aws IAM role to Jenkins
 ![aws-plugin-step06](./docs/images/aws-plugin-step-06b.png)
 
+![aws-plugin-step06](./docs/images/aws-plugin-step-06c.png)
+
 And can you can push your artifacts to s3
 
 ```Jenkins
@@ -479,3 +481,28 @@ Also when you upload a folder but not a file to S3. use `s3Upload(pathStyleAcces
 Full details of pipeline-aws is [here](https://www.jenkins.io/doc/pipeline/steps/pipeline-aws/), for example [upload files/folders to S3](https://www.jenkins.io/doc/pipeline/steps/pipeline-aws/#s3upload-copy-file-to-s3)
 
 More details about using docker in Jenkins pipeline: [Using Docker with Pipeline](https://www.jenkins.io/doc/book/pipeline/docker/)
+
+#### Multi Branches Pipeline
+
+By default Jenkins will scan all your branches. You can have separate Jenkinsfile for each of those branches.
+
+![Multi Branches](./docs/images/multi-branches-01.png)
+
+Why we need Multiple Pipelines?
+
+- Development pipelines are kicked off very frequently and with the continuous deployment will automatically update servers
+
+- Staging is where QA will test the environment, so this needs to be kept more static to prevent interruptions
+
+Multiple Pipelines
+Generally, a Pipeline should have three stages (environments) defined in a Jenkinsfile: Development (build), Staging (test), and Deployment. See a declarative Pipeline example [here](https://jenkins.io/doc/book/pipeline/#pipeline-example).
+
+**Additional Pipelines can be created by creating new branches in your Github repo**. You can create more branches, with names such as "Development", "Staging", and "Deployment", in your Git repository. The diagram below shows the comprehensive steps to create a multibranch Pipeline project on cloud infrastructure. .
+
+![Multi Branches](./docs/images/multi-branches-02.png)
+
+Multi-Pipeline Summary
+
+- There is no limit on the number of pipelines you can have.
+- Optimize for your environment - every setup is different.
+- Be careful with continuous deployment because you may overwrite the wrong thing.
