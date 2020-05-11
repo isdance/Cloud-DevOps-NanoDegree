@@ -345,8 +345,7 @@ test:
 lint:
 	# See local hadolint install instructions:   https://github.com/hadolint/hadolint
 	# This is linter for Dockerfiles
-  # hadolint Dockerfile
-	docker run --rm -i hadolint/hadolint < Dockerfile
+  hadolint Dockerfile
 	# This is a linter for Python source code linter: https://www.pylint.org/
 	# This should be run from inside a virtualenv
 	pylint --disable=R,C,W1203,W1202 app.py
@@ -411,7 +410,7 @@ You will see some error
 Starting installation.
 Installing CircleCI CLI v0.1.7251
 Installing to /usr/local/bin
-An error occured installing the tool.
+An error occurred installing the tool.
 The contents of the directory /tmp/tmp.wNpWsw11Im have been left in place to help to debug the issue.
 ```
 
@@ -602,3 +601,240 @@ pylint --disable=R,C,W1203,W1202 app.py
 ------------------------------------
 Your code has been rated at 10.00/10
 ```
+
+#### 7. Running Dockerfiles
+
+Using "base" images
+One of the advantages of the Docker workflow for developers is the ability to use certified containers from the "official" development teams. In this diagram a developer uses the official Python base image which is developed by the core Python developers. This is accomplished by the `FROM` statement which loads in a previously created container image.
+
+[Dockerfile](./docs/images/dockerfile-01.png)
+
+As the developer makes changes to the `Dockerfile`, they test locally, then push the changes to a private Docker Hub repo. After this, the changes can be used by a deployment process to a Cloud or by another developer.
+
+[docker cheat sheet](https://www.docker.com/sites/default/files/d8/2019-09/docker-cheat-sheet.pdf)
+
+#### 8. Exercise: Deploying to Amazon ECR
+
+**Step 01**: Create a ECR repository:
+![ECR](./docs/images/ecr-01.png)
+
+**Step 02**: Retrieve an authentication token and authenticate your Docker client to your registry.
+Use the AWS CLI:
+
+```
+aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 792545305974.dkr.ecr.us-west-2.amazonaws.com
+
+```
+
+```
+WARNING! Your password will be stored unencrypted in /home/isdance/.docker/config.json.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/engine/reference/commandline/login/#credentials-store
+
+Login Succeeded
+
+```
+
+**Step 03**: Build your Docker image using the following command. For information on building a Docker file from scratch see the instructions here . You can skip this step if your image is already built:
+
+```sh
+docker build -t udacity .
+```
+
+**Step 04**: After the build completes, tag your image so you can push the image to this repository:
+
+```
+docker tag udacity:latest 792545305974.dkr.ecr.us-west-2.amazonaws.com/udacity:latest
+```
+
+**Step 05**: Run the following command to push this image to your newly created AWS repository:
+
+```
+docker push 792545305974.dkr.ecr.us-west-2.amazonaws.com/udacity:latest
+```
+
+#### 9. Lesson Summary
+
+Key Terms:
+Container
+A container is a set of processes that are isolated from the rest of the operating system. They are often megabytes in size.
+
+Virtual Machine
+A virtual machine is the emulation of a physical operating system. They can be Gigabytes in size.
+
+Docker Format Container
+There are several formats for containers. An emerging form is Docker, which involves the definition of a Dockerfile.
+
+pip
+The pip tool installs Python packages.
+
+pylint
+The pylint tool checks the Python source code for syntax errors.
+
+black
+The black tool formats the text of Python source code automatically.
+
+pytest
+The pytest tool is a framework for running tests on Python source code.
+
+IPython
+The ipython interpreter is an interactive terminal for Python. It is the core of the Jupyter notebook.
+
+Makefile
+A Makefile is a file that contains a set of directives used to build software. Most Unix and Linux operating systems have built-in support for this file format.
+
+CircleCI
+A popular SaaS (Software as a Service) build systems used in DevOps workflows.
+
+Docker
+Docker is a company that creates container technology, including an execution engine, collaboration platform via DockerHub and a container format called Dockerfile.
+
+Amazon ECR
+Amazon ECR is a container registry that stores Docker format containers.
+
+#### Lesson 3: Containerization of an Existing Application
+
+#### 1. Exercise: Docker Based Apps
+
+**Step 01**: Download git repo from [here](https://github.com/udacity/DevOps_Microservices/tree/master/Lesson-3-Containerization)
+
+**Step 02**: Verify the Dockerfile
+
+```Dockerfile
+FROM python:3.7.3-stretch
+
+# Working Directory
+WORKDIR /app
+
+# Copy source code to working directory
+COPY . flask_app/web.py /app/
+
+# Install packages from requirements.txt
+# hadolint ignore=DL3013
+RUN pip install --upgrade pip &&\
+    pip install --trusted-host pypi.python.org -r requirements.txt
+
+# Expose port 80
+EXPOSE 80
+
+# Run app.py at container launch
+CMD ["python", "web.py"]
+```
+
+**Step 03**: Create a helper alias for activate venv
+Create a Cloud9 environment, we need a virtual envirment for it. here is a trick, we can create a bash shell alias for cd into the working directory, and active the venv
+
+````
+vim ~/.bashrc
+
+# at the end of the file (use shift+g go the end), and add a line
+
+```bash
+# set alias for active venv
+alias cloud="cd /home/ec2-user/environment/cloud-at-scale && source ~/.cloud-at-scale/bin/activate"
+````
+
+Now `source ~/.bashrc`. you can use `alias` to list all existing alias
+
+```sh
+ec2-user:~/environment/cloud-at-scale (master) $ alias
+alias cloud='cd /home/ec2-user/environment/cloud-at-scale && source ~/.cloud-at-scale/activate'
+alias egrep='egrep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias grep='grep --color=auto'
+alias l.='ls -d .* --color=auto'
+alias ll='ls -l --color=auto'
+alias ls='ls --color=auto'
+alias rvm-restart='rvm_reload_flag=1 source '\''/home/ec2-user/.rvm/scripts/rvm'\'''
+alias vi='vim'
+alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-tilde'
+
+```
+
+now if you try `cloud`, you will go into the project folder, and activate venv
+
+**Step 04**: Create a basic Makefile
+
+```Makefile
+setup:
+	python3 -m venv ~/.cloud-at-scale
+
+install:
+	pip install --upgrade pip &&\
+		pip install -r requirements.txt
+
+test:
+	# python -m pytest -vv -cov=myrepolib test/*.py
+	# python -m pytest -nbval notebook.ipynb
+
+lint:
+	pylint --disable=R,C app.py
+
+all: install lint test
+```
+
+**Step 05**: Complete setup
+Add a basic app.py
+
+```py
+def myfunc():
+    return 1
+
+print(myfunc())
+```
+
+And try to run `make install`, `make lint` and see if it works. If yes then push to github repo.
+
+**Step 05**: Setup CircleCI
+
+```sh
+(.cloud-at-scale) ec2-user:~/environment/cloud-at-scale (master) $ mkdir .circleci
+(.cloud-at-scale) ec2-user:~/environment/cloud-at-scale (master) $ touch .circleci/config.yml
+```
+
+```yml
+# Python CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-python/ for more details
+#
+version: 2
+jobs:
+  build:
+    docker:
+      # Use the same Docker base as the project
+      - image: circleci/python:3.7.3
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "requirements.txt" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+
+      - run:
+          name: install dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            make install
+
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ checksum "requirements.txt" }}
+
+      # run lint!
+      - run:
+          name: run lint
+          command: |
+            . venv/bin/activate
+            make lint
+```
+
+Connect Github repo to CircleCI, and check the CI is working.
+![circleci-remote](./docs/images/circle-ci-03.png)
