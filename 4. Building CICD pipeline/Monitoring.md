@@ -1150,4 +1150,4 @@ sudo filebeat modules enable logstash
 
 5. Now go to Kabana dashboard -> Discover. Choose `filebeat-*`
 
-![Kibana](./docs/images/kibana-02.jpg)
+![Kibana](./docs/images/kibana-02.png)
