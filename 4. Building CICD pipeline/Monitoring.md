@@ -468,7 +468,7 @@ Then you can setup your data source:
 
 2. clone [elastic/ansible-elasticsearch](https://github.com/elastic/ansible-elasticsearch) [git](https://github.com/elastic/ansible-elasticsearch.git)
 
-3. Cd into `ansible-elasticsearch`. You need to install ruby `rvm install "ruby-2.5.7"`
+3. Cd into `ansible-elasticsearch`. 
 
 4. Create folder for roles `mkdir -p roles/elastic.elasticsearch`, and move related folders into roles folder
 
@@ -1151,3 +1151,5 @@ sudo filebeat modules enable logstash
 5. Now go to Kabana dashboard -> Discover. Choose `filebeat-*`
 
 ![Kibana](./docs/images/kibana-02.png)
+
+https://discuss.elastic.co/t/filebeat-is-collecting-logs-but-not-showing-in-kibana/171291/2

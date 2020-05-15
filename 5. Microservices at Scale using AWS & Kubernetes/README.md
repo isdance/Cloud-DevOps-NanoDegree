@@ -353,7 +353,7 @@ lint:
 all: install lint test
 ```
 
-The step `make lint` will need `hadolint`. Here we use docker hadolint/hadolint to lint Dockerfile
+The step `make lint` will need `hadolint`. Here we use docker hadolint/hadolint to lint Dockerfile. But in `CircleCI` we have to download it, see details in `.circleci/config.yml`, please install it by running `sudo wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v1.16.3/hadolint-Linux-x86_64 && sudo chmod +x /bin/hadolint`
 
 Try to run `make lint` and see if there is any error
 
@@ -838,3 +838,84 @@ jobs:
 
 Connect Github repo to CircleCI, and check the CI is working.
 ![circleci-remote](./docs/images/circle-ci-03.png)
+
+#### Container Orchestration with Kubernetes
+
+#### 1. Install Kubectl
+
+```sh
+curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+
+
+sudo chmod +x ./kubectl
+sudo mv ./kubectl /usr/local/bin/kubectl
+
+kubectl version --client
+```
+
+#### 2. Install virtualbox
+
+For VirtualBox users, install VirtualBox using:
+
+```
+sudo apt install virtualbox virtualbox-ext-pack -y
+```
+
+#### 3. Install minicube
+
+```sh
+wget https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+
+sudo chmod +x minikube-linux-amd64
+sudo mv minikube-linux-amd64 /usr/local/bin/minikube
+
+# verify
+minikube version
+```
+
+#### 2. Overview of Kubernetes
+
+What is Kubernetes? It is an open source orchestration system for containers developed by Google and open sourced in 2014. Kubernetes is a useful tool for working with containerized applications. Given our previous work with Docker containers and containerizing an app, working with Kubernetes is the next logical step. Kubernetes was born out of the lessons learned in scaling containerized apps at Google, and is used for automating deployment, scaling and managing such containerized applications.
+
+What are the Benefits of using Kubernetes?
+Kubernetes is the standard for container orchestration. All major cloud providers support Kubernetes. Amazon through Amazon EKS, Google through Google Kubernetes Engine GKE and Microsoft through Azure Kubernetes Service (AKS).
+
+Kubernetes is also a framework for running distributed systems at "planet scale". Google uses it to run billions of containers a week.
+
+A few of the Capabilities of Kubernetes include:
+
+High availability architecture
+
+- Auto-scaling
+- Rich Ecosystem
+- Service discovery
+- Container health management
+- Secrets and configuration management
+
+The downside of these features is the high complexity and learning curve of Kubernetes. You can read more about the features of Kubernetes through the [official documentation](https://kubernetes.io/docs/home/).
+
+##### What are the Basics of Kubernetes?
+
+The core operations involved in Kubernetes include creating a Kubernetes Cluster, deploying an application into the cluster, exposing an application ports, scaling an application and updating an application.
+
+![Kubernetes](./docs/images/kube-01.png)
+
+##### What is the Kubernetes (Cluster) Architecture?
+
+The core of Kubernetes is the cluster. Containers run in the cluster. The core components of the cluster include a cluster master and nodes. Inside nodes there is another hierarchy. This is shown in the diagram. A Kubernetes node can contain multiple pods, which in turn can contain multiple containers and/or volumes.
+
+![Kubernetes](./docs/images/kube-02.png)
+
+##### How do you Set Up a Kubernetes Cluster?
+
+There are two main methods:
+
+1. Set up a local cluster (preferably with Docker Desktop)
+2. Provision a cloud cluster:
+   - Amazon through Amazon EKS
+   - Google through Google Kubernetes Engine GKE
+   - Microsoft through Azure Kubernetes Service (AKS).
+
+If you are using Docker and have enabled kubernetes then you already have a standalone Kubernetes server running. This would be the recommended way to get started with Kubernetes clusters.
+
+##### How do you Launch Containers in a Kubernetes Cluster?
